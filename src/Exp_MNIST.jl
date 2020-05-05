@@ -21,29 +21,43 @@ s = ArgParseSettings()
 # The defaut setting: --test: multiple length scale, QMC
 @add_arg_table! s begin
     "--ntest"
-        help = "another option with an argument"
+        help = "size of testing set"
         arg_type = Int
         default = 2500
     "--TSNE"
         help = "use TSNE or not"
         action = :store_true
     "--dimY" 
-        help = "another option with an argument"
+        help = "target dimension in TSNE"
         arg_type = Int
         default = 2
     "--spectral"
-        help = "use spectral clustering or not"
+        help = "use TSNE or not"
         action = :store_true
+    "--specparam"
+        help = "silimarity parameter in spectral clustering, train if 0"
+        arg_type = Float64
+        default = 0.1
+    "--trainratio"
+        help = "ratio of training set to testing set"
+        arg_type = Float64
+        default = 0.05
 end
 parsed_args = parse_args(ARGS, s)
 # input data
 dataraw, label = MNIST.testdata(Float64)
-N = parsed_args["ntest"]
+dataraw_train, label_train = MNIST.traindata(Float64)
+ntest = parsed_args["ntest"]
+ntrain = Int(floor(ntest*parsed_args["trainratio"]))
 randseed = 1234; rng = MersenneTwister(randseed)
-idx = randperm(rng, N)
-data = reshape(permutedims(dataraw[:, :, idx],(3, 1, 2)), N, size(dataraw,1)*size(dataraw,2));
+idx = randperm(rng, ntest)
+idx_train = randperm(rng, ntrain)
+data = reshape(permutedims(dataraw[:, :, idx],(3, 1, 2)), ntest, size(dataraw,1)*size(dataraw,2))
 label = label[idx]
+data_train = reshape(permutedims(dataraw_train[:, :, idx_train],(3, 1, 2)), ntrain, size(dataraw_train,1)*size(dataraw_train,2));
+label_train = label_train[idx_train]
 k = 10 # number of target clustering
+
 
 before = Dates.now()
 X = data; # set of nodes put into kmeans, unprocessed
@@ -52,11 +66,15 @@ if parsed_args["TSNE"]
     println("Start TSNE")
     X = mytsne(data, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
     algorithm = "TSNE(dim=$(parsed_args["dimY"])) + Kmeans"
-elseif parsed_args["spectral"]
-    θ = 0.1
+elseif parsed_args["spectral"] 
     println("Start spectral clustering")
-    X = spectral_clustering(data, k, θ) # eigenvectors
-    algorithm = "Spectral (θ=$θ) + Kmeans"
+    if parsed_args["specparam"] > 0 # if given a fixed param
+        X = spectral_clustering_model(data, k, parsed_args["specparam"]) 
+        algorithm = "Spectral (θ=$(parsed_args["specparam"])) + Kmeans"
+    else
+        X, θopt = spectral_clustering_main(data, data_train, label_train, k)
+        algorithm = "Supervised Spectral (θ=$θopt) + Kmeans"
+    end
 end
 
 # K-means clustering
@@ -76,7 +94,7 @@ RI = randindex(matched_assignment, matched_actual_labels)
 
 io = open("Kmeans_MNIST_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
-write(io, "Data set: MNIST  number of testing points: $N \n") 
+write(io, "Data set: MNIST  number of testing points: $ntest \n") 
 write(io, "Algorithm: $algorithm 
     Time cost:                                   $(@sprintf("%.5f", elapsedmin))
     Accuracy (ACC):                              $(@sprintf("%.5f", max_acc))

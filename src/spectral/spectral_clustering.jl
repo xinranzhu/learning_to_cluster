@@ -1,17 +1,28 @@
-# Given n data points, given the similarity parameter
-# do spectral clustering
-# θ can be picked to be fixed or trained from training set
-include("../kernels/kernels.jl")
+using Optim
 
-function spectral_clustering(X, k, θ)
+include("../kernels/kernels.jl")
+include("derivatives.jl")
+
+# train an optimal θ
+function spectral_clustering_main(Xtest, X, y, k)
+    n, d = size(X)
+    ntest = size(Xtest)
+    # generate constraints matrix Apm 
+    Apm = gen_constraints(X, y)
+    # optimize loss fun
+    loss(θ) = loss_fun(θ, X, Apm, k)[1]
+    loss_deriv!(G, θ) = loss_fun(θ, X, Apm, k, G)[2]
+    results = optimize((loss, loss_deriv!, θ0))
+    θ = Optim.minimum(results)
+    # Compute eigenvectors on Xtest using the optimal θ 
+    Vtest = spectral_clustering_model(Xtest, k, θ)
+end
+
+
+function spectral_clustering_model(X, k, θ)
     n, d = size(X)
     # generate the affinity matrix
-    if length(θ)>1 # θ = 1/sigma^2
-        A = correlation(Gaussian(), θ, X; jitter = 0) 
-    else
-        A = correlation(Gaussian(), θ[1], X; jitter = 0) 
-    end    
-    A = A .- Diagonal(diag(A)) # A_ii = 0
+    A = affinity_A(X, θ)[1]
     # Define degree matrix
     D = reshape(sum(A, dims = 2), n)
     # normalize the laplacian matrix 
@@ -26,7 +37,7 @@ function spectral_clustering(X, k, θ)
     return V 
 end
 
-function loss_fun(θ, X, Apm, k)
+function loss_fun(θ, X, Apm, k, loss_deriv)
     # compute clustering
     V = spectral_clustering(X, k, θ)
     R = CartesianIndices(Apm)
@@ -37,13 +48,12 @@ function loss_fun(θ, X, Apm, k)
         dij = V[i, :] - V[j, :]
         loss += Apm[I] * dot(dij, dij)
     end
-
     # derivative
-    
+    loss_deriv = nothing
 end
 
 
-function gen_constraints(X, label)
+function gen_constraints(X, y)
     n, d = size(X)
     Apm = Array{Float64, 2}(undef, n, n)
     R = CartesianIndices(Apm)
