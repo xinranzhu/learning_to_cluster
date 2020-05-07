@@ -41,7 +41,7 @@ function laplacian_L(A, dA, D, dD, X, θ)
     sqrtD = 1 ./ sqrt.(D)
     L = Symmetric(Diagonal(sqrtD) * A * Diagonal(sqrtD))
 
-    dL = 
+    # dL = 
     
 
 end

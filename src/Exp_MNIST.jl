@@ -20,7 +20,7 @@ include("spectral/spectral_clustering.jl")
 s = ArgParseSettings()
 # The defaut setting: --test: multiple length scale, QMC
 @add_arg_table! s begin
-    "--ntest"
+    "--ntotal"
         help = "size of testing set"
         arg_type = Int
         default = 2500
@@ -45,22 +45,20 @@ s = ArgParseSettings()
 end
 parsed_args = parse_args(ARGS, s)
 # input data
-dataraw, label = MNIST.testdata(Float64)
-dataraw_train, label_train = MNIST.traindata(Float64)
-ntest = parsed_args["ntest"]
-ntrain = Int(floor(ntest*parsed_args["trainratio"]))
+dataraw, label = MNIST.traindata(Float64)
+ntotal = parsed_args["ntotal"]
 randseed = 1234; rng = MersenneTwister(randseed)
-idx = randperm(rng, ntest)
-idx_train = randperm(rng, ntrain)
-data = reshape(permutedims(dataraw[:, :, idx],(3, 1, 2)), ntest, size(dataraw,1)*size(dataraw,2))
+idx = randperm(rng, ntotal)
+data = reshape(permutedims(dataraw[:, :, idx],(3, 1, 2)), ntotal, size(dataraw,1)*size(dataraw,2))
 label = label[idx]
-data_train = reshape(permutedims(dataraw_train[:, :, idx_train],(3, 1, 2)), ntrain, size(dataraw_train,1)*size(dataraw_train,2));
-label_train = label_train[idx_train]
+# select a fraction to be training data
+ntrain = Int(floor(ntotal*parsed_args["trainratio"]))
+Xtrain = data[1:ntrain, :]
+labeltrain = label[1:ntrain]
 k = 10 # number of target clustering
 
-
 before = Dates.now()
-X = data; # set of nodes put into kmeans, unprocessed
+X = data # set of nodes put into kmeans, unprocessed
 algorithm = "Kmeans"
 if parsed_args["TSNE"]
     println("Start TSNE")
@@ -72,7 +70,7 @@ elseif parsed_args["spectral"]
         X = spectral_clustering_model(data, k, parsed_args["specparam"]) 
         algorithm = "Spectral (θ=$(parsed_args["specparam"])) + Kmeans"
     else
-        X, θopt = spectral_clustering_main(data, data_train, label_train, k)
+        X, θopt = spectral_clustering_main(data, Xtrain, labeltrain, k)
         algorithm = "Supervised Spectral (θ=$θopt) + Kmeans"
     end
 end
@@ -94,7 +92,7 @@ RI = randindex(matched_assignment, matched_actual_labels)
 
 io = open("Kmeans_MNIST_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
-write(io, "Data set: MNIST  number of testing points: $ntest \n") 
+write(io, "Data set: MNIST  number of testing points: $ntotal \n") 
 write(io, "Algorithm: $algorithm 
     Time cost:                                   $(@sprintf("%.5f", elapsedmin))
     Accuracy (ACC):                              $(@sprintf("%.5f", max_acc))

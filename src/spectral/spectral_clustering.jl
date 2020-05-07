@@ -1,7 +1,7 @@
 using Optim
 
 include("../kernels/kernels.jl")
-include("derivatives.jl")
+include("comp_mat_deriv.jl")
 
 # train an optimal θ
 function spectral_clustering_main(Xtest, X, y, k)
@@ -43,7 +43,7 @@ function loss_fun(θ, X, Apm, k, loss_deriv)
     R = CartesianIndices(Apm)
     loss = 0.
     for I in R 
-        global loss
+        # global loss
         i, j = Tuple(I) # get current node pair
         dij = V[i, :] - V[j, :]
         loss += Apm[I] * dot(dij, dij)
