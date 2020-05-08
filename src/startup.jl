@@ -8,6 +8,7 @@ Pkg.add("Distributions")
 Pkg.add("ProgressMeter")
 Pkg.add("Dates")
 Pkg.add("Printf")
+Pkg.add("Latexify")
 using LinearAlgebra
 using Plots
 using MLDatasets
