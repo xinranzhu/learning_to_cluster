@@ -16,6 +16,7 @@ using Printf
 include("TSNE/myTSNE.jl")
 include("kmeans_match_labels.jl")
 include("spectral/spectral_clustering.jl")
+include("spectral/helpers.jl")
 
 s = ArgParseSettings()
 # The defaut setting: --test: multiple length scale, QMC
@@ -42,6 +43,9 @@ s = ArgParseSettings()
         help = "ratio of training set to testing set"
         arg_type = Float64
         default = 0.05
+    "--reduction"
+        help = "use model reduction or not"
+        action = :store_true
 end
 parsed_args = parse_args(ARGS, s)
 # input data
@@ -58,27 +62,39 @@ labeltrain = label[1:ntrain]
 k = 10 # number of target clustering
 
 before = Dates.now()
-X = data # set of nodes put into kmeans, unprocessed
-algorithm = "Kmeans"
-if parsed_args["TSNE"]
-    println("Start TSNE")
-    X = mytsne(data, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
-    algorithm = "TSNE(dim=$(parsed_args["dimY"])) + Kmeans"
-elseif parsed_args["spectral"] 
-    println("Start spectral clustering")
-    if parsed_args["specparam"] > 0 # if given a fixed param
-        X = spectral_clustering_model(data, k, parsed_args["specparam"]) 
-        algorithm = "Spectral (θ=$(parsed_args["specparam"])) + Kmeans"
-    else
-        X, θopt = spectral_clustering_main(data, Xtrain, labeltrain, k)
-        algorithm = "Supervised Spectral (θ=$θopt) + Kmeans"
+if parsed_args["reduction"]
+    println("Start spectral clustering with model reduction")
+    if ntrain == 0
+        R = spectral_reduction_main(data, k, parsed_args["specparam"])
+        algorithm = "Spectral clustering with model reduction (fixed θ = $(parsed_args["specparam"]))"
+    else 
+        θ_init = parsed_args["specparam"] # or random
+        R, θ = spectral_reduction_main(data, k, parsed_args["specparam"], Xtrain = Xtrain, ytrain = labeltrain)
+        algorithm = "Spectral clustering with model reduction (trained θ = $(θ))"
     end
+else # do normal clustering, using plain kmeans or TSNE+kmeans or spectral clustering + kmeans
+    X = data # set of nodes put into kmeans, unprocessed
+    algorithm = "Kmeans"
+    if parsed_args["TSNE"]
+        println("Start TSNE")
+        X = mytsne(data, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
+        algorithm = "TSNE(dim=$(parsed_args["dimY"])) + Kmeans"
+    elseif parsed_args["spectral"] 
+        println("Start spectral clustering")
+        if ntrain == 0 # if given a fixed param
+            X = spectral_clustering_model(data, k, parsed_args["specparam"]) 
+            algorithm = "Spectral (fixed θ=$(parsed_args["specparam"])) + Kmeans"
+        else
+            X, θ = spectral_clustering_main(data, Xtrain, labeltrain, k) #TODO 
+            algorithm = "Supervised Spectral (trained θ=$θ) + Kmeans"
+        end
+    end
+    # K-means clustering
+    println("Start K-means")
+    # warning the matrix put into kmeans should be d*N
+    R = kmeans(X', k; maxiter=200, display=:final)
 end
 
-# K-means clustering
-println("Start K-means")
-# warning the matrix put into kmeans should be d*N
-R = kmeans(X', k; maxiter=200, display=:final)
 @assert nclusters(R) == k # verify the number of clusters
 assignment = assignments(R) # get the assignments of points to clusters
 # c = counts(R) # get the cluster sizes
@@ -90,7 +106,7 @@ elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
 max_acc, matched_assignment, matched_actual_labels = ACC_match_labels(assignment, label, k)
 RI = randindex(matched_assignment, matched_actual_labels)
 
-io = open("Kmeans_MNIST_results.txt", "a")
+io = open("MNIST_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
 write(io, "Data set: MNIST  number of testing points: $ntotal \n") 
 write(io, "Algorithm: $algorithm 

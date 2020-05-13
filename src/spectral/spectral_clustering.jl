@@ -4,18 +4,20 @@ include("../kernels/kernels.jl")
 include("comp_mat_deriv.jl")
 
 # train an optimal θ
-function spectral_clustering_main(Xtest, X, y, k)
-    n, d = size(X)
-    ntest = size(Xtest)
+# Xtrain is a small portion of X, with known label ytrain
+function spectral_clustering_main(X, Xtrain, ytrain, k, dimθ)
+    ntrain, dtrain= size(Xtrain)
+    ntotal = size(X)
     # generate constraints matrix Apm 
-    Apm = gen_constraints(X, y)
+    Apm = gen_constraints(Xtrain, ytrain)
     # optimize loss fun
-    loss(θ) = loss_fun(θ, X, Apm, k)[1]
-    loss_deriv!(G, θ) = loss_fun(θ, X, Apm, k, G)[2]
-    results = optimize((loss, loss_deriv!, θ0))
+    loss(θ) = loss_fun(θ, Xtrain, Apm, k)[1] #TODO
+    loss_deriv!(G, θ) = loss_fun(θ, Xtrain, Apm, k, G)[2] #TODO
+    θ_init = rand(dimθ)
+    results = optimize((loss, loss_deriv!, θ_init))
     θ = Optim.minimum(results)
     # Compute eigenvectors on Xtest using the optimal θ 
-    Vtest = spectral_clustering_model(Xtest, k, θ)
+    Vtest = spectral_clustering_model(X, k, θ)
 end
 
 
@@ -53,20 +55,3 @@ function loss_fun(θ, X, Apm, k, loss_deriv)
 end
 
 
-function gen_constraints(X, y)
-    n, d = size(X)
-    Apm = Array{Float64, 2}(undef, n, n)
-    R = CartesianIndices(Apm)
-    for I in R 
-        i, j = Tuple(I)
-        if i == j
-            constraint = 0
-        elseif y[i] == y[j]
-            constraint = 1
-        else
-            constraint = -1
-        end
-        Apm[I] = constraint
-    end
-    return Apm
-end

@@ -20,7 +20,7 @@ deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
 dAtest_fd = deriv_fd(fun_A, 1e-5)
 θgrid = range(0.01, stop=2, length=ntest)
 err1 = maximum(norm.(deriv_A.(θgrid) - dAtest_fd.(θgrid)))
-@info "One-dim parameter test: error" err1
+@info "dA: One-dim parameter test: error" err1
 
 # multi-dimensional parameter
 θgrid = rand(Uniform(0.01,2), d, ntest)
@@ -35,7 +35,7 @@ for i in 1:ntest
     @info err_current
     err2 = max(err2, err_current)
 end
-@info "Multidimensional parameter test: error" err2
+@info "dA: Multidimensional parameter test: error" err2
 
 # err3 = 0.
 # for i in 1:n, j in 1:n
@@ -53,3 +53,30 @@ end
 #     err3 = max(err3, err_ij)
 # end
 # @info "Multidimensional parameter test: error" err3
+
+fun_D(θ) = degree_D(X, θ)[1]
+deriv_D(θ) =  degree_D(X, θ)[2]
+
+# 1d parameter
+deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
+dDtest_fd = deriv_fd(fun_D, 1e-6)
+θgrid = range(0.01, stop=2, length=ntest)
+err1 = maximum(norm.(deriv_D.(θgrid) - dDtest_fd.(θgrid)))
+@info "dD: One-dim parameter test: error" err1
+
+# multi-dimensional parameter
+θgrid = rand(Uniform(0.01,2), d, ntest)
+dDh = Array{Float64, 2}(undef, n, n)
+err2 = 0.
+for i in 1:ntest
+    global err2
+    θ = θgrid[:, i]
+    dDh = deriv_D(θ) * θ
+    err_current = norm(fun_D(θ .+ 1e-6) - fun_D(θ) - dDh)
+    # err_current = norm(fun_A(θ .+ 1e-5) - fun_A(θ))
+#     @info err_current
+    err2 = max(err2, err_current)
+end
+@info "dD: Multidimensional parameter test: error" err2
+
+
