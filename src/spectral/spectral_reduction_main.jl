@@ -110,7 +110,7 @@ function loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothing)
     H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
     @assert size(H) == (m, m) 
     ef = eigen(Symmetric(H), m-k+1:m)
-    Y = ef.vectors
+    Y = ef.vectors 
     Λ = ef.values
     # select training indices
     Vhat_train_Y = Vhat[idtrain, :] * Y
@@ -169,4 +169,4 @@ function kmeans_reduction(Vhat, Y, k; maxiter = maxiter)
     @assert nclusters(R) == k # verify the number of clusters
     a = assignments(R) # get the assignments of points to clusters
     return a
-end
+end 

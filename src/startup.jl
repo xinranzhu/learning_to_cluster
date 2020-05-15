@@ -9,6 +9,7 @@ Pkg.add("ProgressMeter")
 Pkg.add("Dates")
 Pkg.add("Printf")
 Pkg.add("Latexify")
+Pkg.add("TensorOperations")
 using LinearAlgebra
 using Plots
 using MLDatasets
