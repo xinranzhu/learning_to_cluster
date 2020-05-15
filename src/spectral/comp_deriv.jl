@@ -80,3 +80,5 @@ function laplacian_L(X, θ; I_rows = nothing, debug = false)
         return L, dL
     end
 end
+
+

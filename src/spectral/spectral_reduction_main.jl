@@ -5,7 +5,15 @@ using Optim
 using Distances
 using Dates
 
-function spectral_reduction_main(X, k, θ, rangeθ, Xtrain = nothing, ytrain = nothing, idtrain = nothing)
+"""
+k: number of clusters
+X:
+θ: either initial value of theta
+Xtrain:
+ytrain: 
+"""
+function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
+
     # compute Vhat 
     @info "Start computing Vhat"
     before = Dates.now()
@@ -20,12 +28,17 @@ function spectral_reduction_main(X, k, θ, rangeθ, Xtrain = nothing, ytrain = n
     dimθ = length(θ)
     # l_rows = I_rows == nothing ? n : length(I_rows)
     # train an optimal θ value if have training set
+<<<<<<< HEAD
     if Xtrain != nothing && ytrain != nothing 
         before = Dates.now()
         ntrain, dtrain= size(Xtrain)
+=======
+    if Xtrain != nothing && ytrain != nothing  #does training
+        ntrain, dtrain= size(Xtrain) 
+>>>>>>> 4ae20ca62ab2b79cc243be28db4bcbe7b9f6db81
         ntotal = size(X)
         # generate constraints matrix Apm 
-        Apm = gen_constraints(Xtrain, ytrain) 
+        Apm = gen_constraints(Xtrain, ytrain)  #constraint matrix
         # optimize loss fun
         @info "Start training θ"
         loss(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[1] 
@@ -54,10 +67,16 @@ function spectral_reduction_main(X, k, θ, rangeθ, Xtrain = nothing, ytrain = n
     elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
     @info "H and Y computation time cost", elapsedmin
 
+<<<<<<< HEAD
     # put Vhat*Y into kmeans
     @info "Start kmeans"
     @time R = kmeans((Vhat*Y)', k; maxiter=200, display=:final)
     return R
+=======
+    #TODO: put VY into kmeans and return clustering results
+    # will have to code up our own kmeans, to reuse Vhat - section 3.4, progress report
+    R = kmeans_reduction(Vhat, Y, k; maxiter = maxiter)
+>>>>>>> 4ae20ca62ab2b79cc243be28db4bcbe7b9f6db81
 end
 
 
@@ -174,4 +193,11 @@ function comp_dY(Y, Λ, H, dH, dimθ)
     end
     dY = dimθ == 1 ? dropdims(dY; dims = 3) : dY
     return dY
+end
+
+function kmeans_reduction(Vhat, Y, k; maxiter = maxiter)    
+    R = kmeans((Vhat*Y)', k; maxiter=200, display=:iter)
+    @assert nclusters(R) == k # verify the number of clusters
+    a = assignments(R) # get the assignments of points to clusters
+    return a
 end
