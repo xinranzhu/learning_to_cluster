@@ -111,3 +111,33 @@ Algorithm: TSNE(dim=2) + Kmeans
     Rand index (agreement probability):          0.90265
     Mirkin's index (disagreement probability):   0.09735
     Hubert's index P(agree) - P(disagree):       0.80531 
+
+2020-05-15T00:18:35.472, randseed: 1234 
+Data set: MNIST  number of testing points: 2500 
+Algorithm: Kmeans 
+    Time cost:                                   0.09382
+    Accuracy (ACC):                              0.56840
+    Adjusted Rand index:                         0.44527
+    Rand index (agreement probability):          0.89718
+    Mirkin's index (disagreement probability):   0.10282
+    Hubert's index P(agree) - P(disagree):       0.79436 
+
+2020-05-15T00:31:19.001, randseed: 1234 
+Data set: MNIST  number of testing points: 2500 
+Algorithm: TSNE(dim=2) + Kmeans 
+    Time cost:                                   9.25407
+    Accuracy (ACC):                              0.61440
+    Adjusted Rand index:                         0.58605
+    Rand index (agreement probability):          0.92481
+    Mirkin's index (disagreement probability):   0.07519
+    Hubert's index P(agree) - P(disagree):       0.84962 
+
+2020-05-15T01:53:37.473, randseed: 1234 
+Data set: MNIST  number of testing points: 2500 
+Algorithm: Kmeans 
+    Time cost:                                   0.10343
+    Accuracy (ACC):                              0.59640
+    Adjusted Rand index:                         0.41348
+    Rand index (agreement probability):          0.88975
+    Mirkin's index (disagreement probability):   0.11025
+    Hubert's index P(agree) - P(disagree):       0.77950 

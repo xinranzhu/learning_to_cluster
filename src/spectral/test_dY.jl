@@ -34,19 +34,19 @@ ind_shuffle = randperm(rng, size(data, 1))
 data = data[ind_shuffle, :];
 @info size(data)
 
-X = data[1:3000, :]; n, d = size(X)
+X = data[1:2000, :]; n, d = size(X)
 ntest = 10; h = 1e-5
 I_rows = nothing
 
 # compute Vhat and Vhatm
 @info "Computing Vhat"
-N_sample = 1000
+N_sample = 500
 ranges = [500 3000]
 rangesm = repeat([500 3000], d, 1)
 
-Vhat, _ = comp_Vhat(X, k, ranges; N_sample = 500)
+Vhat, _ = comp_Vhat(X, k, ranges; N_sample = N_sample)
 @info "Size Vhat:" size(Vhat)
-Vhatm, _ = comp_Vhat(X, k, rangesm; N_sample = 500)
+Vhatm, _ = comp_Vhat(X, k, rangesm; N_sample = N_sample)
 @info "Size Vhatm:" size(Vhatm)
 
 function comp_dY_full(X, θ, Vhat)

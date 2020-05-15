@@ -26,17 +26,18 @@ include("spectral_reduction_main.jl")
 # abalone
 df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
 data = convert(Matrix, df[:,2:8]) 
+label = convert(Array, df[:, 2]) 
 k = 29
 
 # shuffle data: n * d
 randseed = 1234; rng = MersenneTwister(randseed)
 ind_shuffle = randperm(rng, size(data, 1))
 data = data[ind_shuffle, :];
-label = label[idx]
+label = label[ind_shuffle]
 @info size(data)
 
-X = data[1:3000, :]; n, d = size(X)
-y = label[1:3000]
+X = data[1:300, :]; n, d = size(X)
+y = label[1:300]
 # select a fraction to be training data
 ntrain = Int(floor(n*0.2))
 idtrain = 1:ntrain
@@ -45,7 +46,7 @@ ytrain = y[idtrain]
 
 # compute Vhat and Vhatm
 @info "Computing Vhat"
-N_sample = 1000
+N_sample = 100
 ranges = [500 3000]
 rangesm = repeat([500 3000], d, 1)
 
@@ -56,11 +57,11 @@ Vhatm, _ = comp_Vhat(X, k, rangesm; N_sample = 500)
 
 Apm = gen_constraints(Xtrain, ytrain) 
 
-loss(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[1] 
-loss_deriv(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[2] 
+loss(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[1] 
+loss_deriv(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[2] 
 
-lossm(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhatm)[1] 
-loss_derivm(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhatm)[2] 
+lossm(θ) = loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhatm)[1] 
+loss_derivm(θ) = loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhatm)[2] 
 
 @info "Start 1d derivative test"
 ntest = 100; h = 1e-5

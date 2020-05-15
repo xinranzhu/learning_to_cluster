@@ -1,7 +1,7 @@
 using Optim
 
 include("../kernels/kernels.jl")
-include("comp_mat_deriv.jl")
+include("comp_deriv.jl")
 
 # train an optimal θ
 # Xtrain is a small portion of X, with known label ytrain
@@ -17,41 +17,71 @@ function spectral_clustering_main(X, Xtrain, ytrain, k, dimθ)
     results = optimize((loss, loss_deriv!, θ_init))
     θ = Optim.minimum(results)
     # Compute eigenvectors on Xtest using the optimal θ 
-    Vtest = spectral_clustering_model(X, k, θ)
+    Vtest, _ = spectral_clustering_model(X, k, θ)
+    return Vtest, θ
 end
 
 
 function spectral_clustering_model(X, k, θ)
     n, d = size(X)
-    # generate the affinity matrix
-    A = affinity_A(X, θ)[1]
-    # Define degree matrix
-    D = reshape(sum(A, dims = 2), n)
-    # normalize the laplacian matrix 
-    sqrtD = 1 ./ sqrt.(D)
-    L = Diagonal(sqrtD) * A * Diagonal(sqrtD);
+    dimθ = length(θ)
+    # generate the Laplacian matrix
+    L, dL = laplacian_L(X, θ)
     # compute k eigenvectors, store in V
-    V = eigvecs(L)[:, n-k+1:end]
+    ef = eigen(Symmetric(L), n-k+1:n)
+    Y = ef.vectors
+    Λ = ef.values
     @assert size(V, 2) == k # make sure returns k eigenvectors
+
+    # compute dV
+    dV = comp_dY_L(V, Λ, L, dL, dimθ)
+
     # normalize rows of V
-    # rownorms = mapslices(norm, V; dims = 2)
+    # rownorms = mapsliceås(norm, V; dims = 2)
     # V = broadcast(/, V, rownorms)
-    return V 
+    return V, dV 
 end
 
-function loss_fun(θ, X, Apm, k, loss_deriv)
+function loss_fun(θ, X, Xtrain, idtrain, Apm, k)
+    ntrain, d = size(Xtrain)
+    n = size(X, 1)
+    dimθ = length(θ)
+    @assert size(Apm) == (ntrain, ntrain)
     # compute clustering
-    V = spectral_clustering(X, k, θ)
-    R = CartesianIndices(Apm)
-    loss = 0.
-    for I in R 
-        # global loss
-        i, j = Tuple(I) # get current node pair
-        dij = V[i, :] - V[j, :]
-        loss += Apm[I] * dot(dij, dij)
-    end
+    V, dV = spectral_clustering_model(X, k, θ)
+    @assert size(V) == (n, k)
+    # compute loss
+    V_train = V[idtrain, :]
+    dV_train = reshape(dV, n, k, dimθ)[idtrain, :, :]
+    K = Array{Float64, 2}(undef, ntrain, ntrain)
+    K = pairwise!(K, SqEuclidean(), V_train, dims=1)
+    loss = dot(Apm, K) ./ 2
     # derivative
-    loss_deriv = nothing
+    K1 = broadcast(-, reshape(V_train, ntrain, 1, k, 1), reshape(V_train, 1, ntrain, k, 1))
+    K2 = broadcast(-, reshape(dV_train, ntrain, 1, k, dimθ), reshape(dV_train, 1, ntrain, k, dimθ))
+    @assert size(K1) == (ntrain, ntrain, k, 1)
+    @assert size(K2) == (ntrain, ntrain, k, dimθ)
+    K3 = dropdims(sum(broadcast(*, K1, K2); dims=3); dims=3)
+    @assert size(K3) == (ntrain, ntrain, dimθ)
+    dloss = broadcast(*, reshape(Apm, ntrain, ntrain, 1), K3)
+    dloss = reshape(sum(dloss; dims=[1, 2]), dimθ)
+    return loss, dloss
 end
 
-
+function comp_dY_L(V, Λ, L, dL, dimθ)
+    n, k = size(V)
+    dV = Array{Float64, 3}(undef, n, k, dimθ)
+    for i in 1:k 
+        v = V[:, i]
+        if dimθ == 1
+            dLv = dL * v
+        else
+            dLv = dHy = Array{Float64, 2}(undef, n, dimθ)
+            @tensor dLv[i, j] = dL[i, s, j] * v[s]
+        end
+        dLv .-= v * (v' * dLv)
+        dV[:, i, :] =  [(Λ[i] * I(n) - L); v'] \ [dLv; zeros(dimθ)'] 
+    end
+    dV = dimθ == 1 ? dropdims(dV; dims = 3) : dV
+    return dV
+end

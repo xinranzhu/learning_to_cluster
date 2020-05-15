@@ -1,6 +1,7 @@
 # train an optimal θ
 # Xtrain is a small portion of X, with known label ytrain
 include("helpers.jl")
+
 using Optim
 using Distances
 using Dates
@@ -36,8 +37,8 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
         Apm = gen_constraints(Xtrain, ytrain)  #constraint matrix
         # optimize loss fun
         @info "Start training θ"
-        loss(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[1] 
-        loss_deriv(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[2] 
+        loss(θ) = loss_fun_reductionloss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[1] 
+        loss_deriv(θ) = loss_fun_reductionloss_fun_reduction(θ,  X, Xtrain, idtrain, Apm, k, Vhat)[2] 
         function loss_deriv!(G, θ)
             G = loss_deriv(θ)
         end
@@ -64,10 +65,9 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
 
     # put Vhat*Y into kmeans
     @info "Start kmeans"
-    @time R = kmeans((Vhat*Y)', k; maxiter=200, display=:final)
-    return R
+    @time a =  kmeans_reduction(Vhat, Y, k; maxiter = 200)    
+    return a
 end
-
 
 function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = false, num_rows = nothing)
     n, d = size(X)
@@ -115,18 +115,16 @@ function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = fal
         end
         @info "Error from partial rows:" err
     end
-
     I_rows = nothing
     return Vhat, I_rows
 end
 
-#TODO
-function loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothing)
+function loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothing)
     dimθ = length(θ)
     ntrain, d = size(Xtrain)
     n, m = size(Vhat)
     # compute Y(θ)
-    L, dL = laplacian_L(X, θ, I_rows) 
+    L, dL = laplacian_L(X, θ) 
     H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
     @assert size(H) == (m, m) 
     ef = eigen(Symmetric(H), m-k+1:m)
@@ -141,12 +139,13 @@ function loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothing)
 
     # compute d(Y(θ))
     if dimθ == 1
-        dH = I_rows == nothing ? Vhat' * dL * Vhat : (Vhat[I_rows, :])' * (dL[I_rows, ] * Vhat)
+        # dH = I_rows == nothing ? Vhat' * dL * Vhat : (Vhat[I_rows, :])' * (dL[I_rows, ] * Vhat)
+        dH = Vhat' * dL * Vhat
     else
         dH = Array{Float64, 3}(undef, m, m, dimθ)
         @tensor dH[i,j,k] = Vhat'[i, s] * dL[s, l, k] * Vhat[l, j] 
     end
-    dY = comp_dY(Y, Λ, H, dH)
+    dY = comp_dY(Y, Λ, H, dH, dimθ)
     if dimθ == 1
         Vhat_train_Y = Vhat[idtrain, :] * Y
         Vhat_train_dY = Vhat[idtrain, :] * dY
@@ -166,15 +165,14 @@ function loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothing)
 end
 
 function comp_dY(Y, Λ, H, dH, dimθ)
-    k = length(Λ)
+    m, k = size(Y)
     dY = Array{Float64, 3}(undef, m, k, dimθ)
     for i in 1:k
         y = Y[:, i]
-        λ = Λ[i]
         if dimθ == 1
             dHy = dH * y
         else
-            dHy = Array{Float64, 3}(undef, m, dimθ)
+            dHy = Array{Float64, 2}(undef, m, dimθ)
             @tensor dHy[i, j] = dH[i, s, j] * y[s]
         end
         dHy .-= y * (y' * dHy)
@@ -184,8 +182,8 @@ function comp_dY(Y, Λ, H, dH, dimθ)
     return dY
 end
 
-function kmeans_reduction(Vhat, Y, k; maxiter = maxiter)    
-    R = kmeans((Vhat*Y)', k; maxiter=200, display=:iter)
+function kmeans_reduction(Vhat, Y, k; maxiter = 200)    
+    R = kmeans((Vhat*Y)', k; maxiter=maxiter, display=:iter)
     @assert nclusters(R) == k # verify the number of clusters
     a = assignments(R) # get the assignments of points to clusters
     return a
