@@ -3,29 +3,45 @@
 include("helpers.jl")
 using Optim
 using Distances
+using Dates
 
 function spectral_reduction_main(X, k, θ, rangeθ, Xtrain = nothing, ytrain = nothing, idtrain = nothing)
     # compute Vhat 
-    Vhat, I_rows = comp_Vhat(X, k, rangeθ) #TODO1 below
+    @info "Start computing Vhat"
+    before = Dates.now()
+    Vhat, I_rows = comp_Vhat(X, k, rangeθ) 
     m = size(Vhat, 2)
     @assert m > k 
+    after = Dates.now()
+    elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
+    @info "Vhat size, time cost", size(Vhat), elapsedmin
+
     n, d = size(X)
     dimθ = length(θ)
     # l_rows = I_rows == nothing ? n : length(I_rows)
     # train an optimal θ value if have training set
     if Xtrain != nothing && ytrain != nothing 
+        before = Dates.now()
         ntrain, dtrain= size(Xtrain)
         ntotal = size(X)
         # generate constraints matrix Apm 
         Apm = gen_constraints(Xtrain, ytrain) 
         # optimize loss fun
+        @info "Start training θ"
         loss(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[1] 
-        loss_deriv!(G, θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[2] 
-        θ_init = θ # or rand(dimθ)
+        loss_deriv(θ) = loss_fun_reductionloss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhat)[2] 
+        function loss_deriv!(G, θ)
+            G = loss_deriv(θ)
+        end
+        θ_init = rand(Uniform(rangeθ[1], rangeθ[2]), dimθ)
         results = optimize((loss, loss_deriv!, θ_init))
         θ = Optim.minimum(results)
+        after = Dates.now()
+        elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
+        @info "Trained θ, time cost " θ, elapsedmin
     end
 
+    before = Dates.now()
     # compute H 
     L, _ = laplacian_L(X, θ, I_rows) 
     H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
@@ -34,10 +50,13 @@ function spectral_reduction_main(X, k, θ, rangeθ, Xtrain = nothing, ytrain = n
     # compute Y, k largest eigenvectors of H
     ef = eigen(Symmetric(H), m-k+1:m)
     Y = ef.vectors
+    after = Dates.now()
+    elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
+    @info "H and Y computation time cost", elapsedmin
 
-    #TODO: put VY into kmeans and return clustering results
-    # will have to code up our own kmeans, to reuse Vhat - section 3.4, progress report
-    R = kmeans_reduction(Vhat, Y, k; maxiter = maxiter)
+    # put Vhat*Y into kmeans
+    @info "Start kmeans"
+    @time R = kmeans((Vhat*Y)', k; maxiter=200, display=:final)
     return R
 end
 
