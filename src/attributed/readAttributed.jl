@@ -1,9 +1,10 @@
 using DataFrames
 using CSV
 using Latexify
+using SparseArrays
 
-title = CSV.read("../data/soc-redditHyperlinks-title.tsv")
-body = CSV.read("../data/soc-redditHyperlinks-body.tsv")
+title = CSV.read("../../data/soc-redditHyperlinks-title.tsv")
+body = CSV.read("../../data/soc-redditHyperlinks-body.tsv")
 
 #pre-processing
 subreddits_from = Set(body[1])
@@ -13,6 +14,40 @@ const n_title = size(title, 1)
 const n_body = size(body, 1)
 #571927 total directed edges
 #43695 subreddits
+
+"""
+Get dictionary of subreddits, where keys are numbers and values are strings
+"""
+function getDict(df)
+    subreddits_from = df[:, 1]
+    subreddits_to = df[:, 2]
+    b = Set(subreddits_from);
+    e = Set(subreddits_to);
+    f = union(b, e);
+    len = length(f);
+    t = 1:len;
+    c = zip(t, f);
+    subreddits = Dict{Int, String}()
+    for pair in c
+        push!(subreddits, pair[1] => pair[2])
+    end
+    return subreddits
+end
+
+
+# numchar numchar_no_space frac_alphabet frac_digits frac_uppercase frac_white_spaces frac_special_chars num_words num_unique_words num_long_wordsy
+"""
+"""
+function prop_to_mat(vecs_str, num)
+    A = Array{Float64, 2}(undef, num, 11);
+    for i =1:num
+        vecs = split(vecs_str[i], ",");
+        for j=1:11
+            A[i, j] = parse(Float64, vecs[j]) 
+        end
+    end
+    return A
+end
 
 #define dict structures/translation dictionaries
 num2str = getDict(body)
@@ -63,28 +98,19 @@ function getBodyAttributeAdj()
     return ss
 end
 
-diagonal(ss) = (ss[i, i] for i = 1:size(ss, 1))
-d =diagonal(ss)
-cc = 0;
-for iter in d
-    println(iter)
+
+#diagonal(ss) = (ss[i, i] for i = 1:size(ss, 1))
+#d =diagonal(ss)
+#cc = 0;
+#for iter in d
+#    println(iter)
    # global cc = cc + ss[iter];
-end
+#
+#println("number nonzero entries of body adj matrix: ", count(!iszero, ss))
+#println("number zero of body adj matrix: ", count(iszero, ss))
 
 
-# numchar numchar_no_space frac_alphabet frac_digits frac_uppercase frac_white_spaces frac_special_chars num_words num_unique_words num_long_wordsy
-"""
-"""
-function prop_to_mat(vecs_str, num)
-    A = Array{Float64, 2}(undef, num, 11);
-    for i =1:num
-        vecs = split(vecs_str[i], ",");
-        for j=1:11
-            A[i, j] = parse(Float64, vecs[j]) 
-        end
-    end
-    return A
-end
+
 
 
 function latexify_df(df_descr)
@@ -95,24 +121,6 @@ function latexify_df(df_descr)
     l = latexify(y2)
 end
 
-"""
-Get dictionary of subreddits, where keys are numbers and values are strings
-"""
-function getDict(df)
-    subreddits_from = df[:, 1]
-    subreddits_to = df[:, 2]
-    b = Set(subreddits_from);
-    e = Set(subreddits_to);
-    f = union(b, e);
-    len = length(f);
-    t = 1:len;
-    c = zip(t, f);
-    subreddits = Dict{Int, String}()
-    for pair in c
-        push!(subreddits, pair[1] => pair[2])
-    end
-    return subreddits
-end
 
 
 

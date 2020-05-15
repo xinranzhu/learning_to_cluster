@@ -10,6 +10,7 @@ Pkg.add("Dates")
 Pkg.add("Printf")
 Pkg.add("Latexify")
 Pkg.add("TensorOperations")
+Pkg.add("SparseArrays")
 using LinearAlgebra
 using Plots
 using MLDatasets
