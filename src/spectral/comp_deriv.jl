@@ -65,5 +65,6 @@ function laplacian_L(X, θ; I_rows = nothing)
     # L = Symmetric(Diagonal(sqrtD) * A * Diagonal(sqrtD))
 
     # dL = not sure about the fastest way 
-
 end
+
+
