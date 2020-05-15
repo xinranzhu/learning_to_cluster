@@ -28,14 +28,9 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
     dimθ = length(θ)
     # l_rows = I_rows == nothing ? n : length(I_rows)
     # train an optimal θ value if have training set
-<<<<<<< HEAD
     if Xtrain != nothing && ytrain != nothing 
         before = Dates.now()
         ntrain, dtrain= size(Xtrain)
-=======
-    if Xtrain != nothing && ytrain != nothing  #does training
-        ntrain, dtrain= size(Xtrain) 
->>>>>>> 4ae20ca62ab2b79cc243be28db4bcbe7b9f6db81
         ntotal = size(X)
         # generate constraints matrix Apm 
         Apm = gen_constraints(Xtrain, ytrain)  #constraint matrix
@@ -67,16 +62,10 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
     elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
     @info "H and Y computation time cost", elapsedmin
 
-<<<<<<< HEAD
     # put Vhat*Y into kmeans
     @info "Start kmeans"
     @time R = kmeans((Vhat*Y)', k; maxiter=200, display=:final)
     return R
-=======
-    #TODO: put VY into kmeans and return clustering results
-    # will have to code up our own kmeans, to reuse Vhat - section 3.4, progress report
-    R = kmeans_reduction(Vhat, Y, k; maxiter = maxiter)
->>>>>>> 4ae20ca62ab2b79cc243be28db4bcbe7b9f6db81
 end
 
 
