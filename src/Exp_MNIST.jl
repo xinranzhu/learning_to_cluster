@@ -59,6 +59,7 @@ label = label[idx]
 ntrain = Int(floor(ntotal*parsed_args["trainratio"]))
 Xtrain = data[1:ntrain, :]
 labeltrain = label[1:ntrain]
+idtrain = 1:ntrain
 k = 10 # number of target clustering
 
 before = Dates.now()

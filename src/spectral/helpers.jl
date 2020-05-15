@@ -13,5 +13,5 @@ function gen_constraints(X, y)
         end
         Apm[I] = constraint
     end
-    return Apm
+    return Symmetric(Apm)
 end
