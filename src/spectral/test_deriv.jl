@@ -23,8 +23,8 @@ ind_shuffle = randperm(rng, size(data, 1))
 data = data[ind_shuffle, :]
 
 ###########################################################
-X = data[1:200, :]; n, d = size(X)
-ntest = 100; h = 1e-5
+X = data[1:2500, :]; n, d = size(X)
+ntest = 1; h = 1e-5
 I_rows = nothing
 # I_rows = randperm(n)[1:Int(floor(n/2))]
 

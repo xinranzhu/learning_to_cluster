@@ -160,6 +160,7 @@ function loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothi
             K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
             dloss[i] = dot(Apm, K)
         end
+        dloss = reshape(dloss, dimθ)
     end
     return loss, dloss
 end

@@ -4,10 +4,12 @@
 # this changes if paramterization form changes
 # turns out we always need full A, even in L[I_rows, :] since we need full D there
 function affinity_A(X, θ)
+    # @info "enter affinity A"
     n, d = size(X) 
     dimθ = length(θ)
     # if I_rows == nothing 
-    X1 = X; n1 = n
+    # X1 = X;
+    n1 = n
     if length(θ)>1 # θ = 1/sigma^2
         A = correlation(Gaussian(), θ, X) 
     else
@@ -25,7 +27,8 @@ function affinity_A(X, θ)
     #     @assert size(A) == (n1, n) 
     # end
     # derivative
-    Xdist = broadcast(-, reshape(X1, n1, 1, d), reshape(X, 1, n, d))
+    # @info "finish computing A"
+    Xdist = broadcast(-, reshape(X, n1, 1, d), reshape(X, 1, n, d))
     @assert size(Xdist) == (n1, n, d)
     Xdist = - (Xdist .^2) ./ 2
     if dimθ == 1
@@ -33,7 +36,8 @@ function affinity_A(X, θ)
         dA = A .* dropdims(sum(Xdist, dims = 3); dims=3)
     elseif dimθ == d
         dA = Array{Float64, 3}(undef, n1, n, d)
-        dA = repeat(A, 1, 1, dimθ) .* Xdist
+        # dA = repeat(A, 1, 1, dimθ) .* Xdist
+        dA = broadcast(*, reshape(A, n1, n, 1), Xdist)
     else
         error("Dimension of parameter should be either 1 or $d")
     end
@@ -42,15 +46,21 @@ end
 
 # don't have to change for different paramterization form
 function degree_D(X, θ)
-    A, dA = affinity_A(X, θ)    
+    # @info "enter degree D"
+    A, dA = affinity_A(X, θ)  
+    # @info "finish computing A"  
     dimθ = length(θ)
     D = dropdims(sum(A, dims = 2); dims=2)
+    # @info "finish computing D"
     dD = dropdims(sum(dA, dims = 2); dims=2)
+    # @info "finish computing dD"
     return D, dD, A, dA
 end
 
 function laplacian_L(X, θ; I_rows = nothing, debug = false)
+    # @info "enter laplacian"
     (D, dD, A, dA) = degree_D(X, θ)
+    # @info "finish computing D, A" size(D), size(dD), size(A), size(dA)
     sqrtD = 1 ./ sqrt.(D)
     n = length(D)
     d = length(θ)
@@ -59,7 +69,7 @@ function laplacian_L(X, θ; I_rows = nothing, debug = false)
         n1 = n
         sqrtDleft = sqrtD
         invDdDleft = invDdD
-        L = Symmetric(Diagonal(sqrtDleft) * A * Diagonal(sqrtD))
+        L = Symmetric(Diagonal(sqrtD) * A * Diagonal(sqrtD))
     else
         n1 = length(I_rows)
         dA = reshape(dA, n, n, d)[I_rows, :, :]
@@ -68,17 +78,20 @@ function laplacian_L(X, θ; I_rows = nothing, debug = false)
         invDdDleft = invDdD[I_rows, :]
         L = Diagonal(sqrtDleft) * A * Diagonal(sqrtD)
     end
+    # @info "finish computing L" size(L)
     dL = broadcast(*, reshape(sqrtDleft, n1, 1), dA) 
     dL = reshape(broadcast(*, reshape(sqrtD, 1, n), dL), n1, n, d)
     dL .-= broadcast(*, reshape(invDdDleft, n1, 1, d), L)./2 .+ broadcast(*, reshape(invDdD, 1, n, d), L)./2
     if d == 1 
         dL = dropdims(dL; dims = 3)
     end
-    if debug
-        return L, dL, D, dD, A, dA
-    else
-        return L, dL
-    end
+    # @info "finish computing dL" size(dL)
+    # if debug
+    #     return L, dL, D, dD, A, dA
+    # else
+    #     return L, dL
+    # end
+    return L, dL
 end
 
 
