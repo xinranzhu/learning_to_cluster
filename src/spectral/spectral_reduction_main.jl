@@ -84,6 +84,7 @@ function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int =
     # use quasi-random samples
     s = SobolSeq(rangeθ[:,1], rangeθ[:,2])
     N = hcat([next!(s) for i = 1:N_sample]...)' # N_sample * d
+    @info "Size of QMC nodes " size(N)
     Vhat_sample = Array{Float64, 2}(undef, n, k*N_sample)
     for i in 1:N_sample
         θ = N[i, :]

@@ -67,10 +67,10 @@ N_sample_set = load("./saved_data/abalone_Nsample_set.jld")["data"]
 
 n_range = size(ranges, 1)
 n_N_sample = length(N_sample_set)
-for i = 3:n_range
-    for j in 1:n_N_sample
+for j in 1:n_N_sample
+    for i = 1:n_range
         rangeθs = reshape(ranges[i, :], 1, 2)
-        rangeθ = parsed_args["single"] ? rangeθs : repeat(rangeθ, parsed_args["dimtheta"], 1)
+        rangeθ = parsed_args["single"] ? rangeθs : repeat(rangeθs, d, 1)
         N_sample = N_sample_set[j]
         @info "Start computing Vhat, range, single or multi and N_sample", rangeθs, parsed_args["single"], N_sample
         before = Dates.now()

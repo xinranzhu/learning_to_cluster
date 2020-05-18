@@ -187,7 +187,7 @@ RI = randindex(matched_assignment[ntrain+1:end], y[ntrain+1:end])
 io = open("$(parsed_args["dataset"])_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
 write(io, "Data set: $(parsed_args["dataset"])  testing points: $n; training data: $ntrain\n") 
-write(io, "rangeθ: $rangeθs, dimθ: $dimθ; N_sample: $N_sample; m: $m \n")
+write(io, "rangeθ: $rangeθs, dimθ: $dimθ; N_sample: $N_sample; m: $m ; Vhat_timecost = $Vhat_timecost \n")
 write(io, "Algorithm: $algorithm 
     Time cost:                                   $(@sprintf("%.5f", elapsedmin))
     Accuracy (ACC):                              $(@sprintf("%.5f", max_acc))
