@@ -69,6 +69,9 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
     return a
 end
 
+"""
+Computes Vhat using several theta samples. 
+"""
 function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = false, num_rows = nothing)
     n, d = size(X)
     dimθ = size(rangeθ, 1)

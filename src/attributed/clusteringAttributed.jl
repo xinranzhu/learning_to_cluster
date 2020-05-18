@@ -121,8 +121,3 @@ function laplacian_attributed_L(params)
     L, dL = laplacian_attributed(params[1], params[2:end])
 end
 
-
-
-
-
-
