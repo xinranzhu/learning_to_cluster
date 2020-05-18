@@ -50,11 +50,61 @@ function removeWeights(A)
     return B
 end
 
-A = getBodyWeightedAdj()   #weighted adjacency matrix
-B = removeWeights(A) #unweighted adj matrix
-P = getBodyAttributeAdj()  #adjacency matrix of attributes (recall that graph is edge-attributed)
-Pn = normalize(P)
-D =  dropdims(sum(A, dims = 2), dims=2) #Degree matrix
+function loadmats()
+    A = getBodyWeightedAdj()   #weighted adjacency matrix
+    B = removeWeights(A) #unweighted adj matrix
+    P = getBodyAttributeAdj()  #adjacency matrix of attributes (recall that graph is edge-attributed)
+    Pn = normalizeAttributes(P)
+    D =  dropdims(sum(A, dims = 2), dims=2) #Degree matrix
+    return (A, B, P, Pn, D)
+end
+
+"""
+Get ith layer of sparse tensor. It is assumed that tensor is stored as a 2D sparse array,
+with multi-dimensional array entries
+"""
+function getLayer(Pn, k)
+    m, n = size(Pn)
+    Layer = spzeros(m, n)
+    rows = rowvals(Pn)
+    vals = nonzeros(Pn)
+    for j = 1:n
+        for i in nzrange(Pn, j)
+            row = rows[i]
+            Layer[row, j] = Pn[row, j][k]
+        end
+    end
+    return Layer
+end
+
+"""
+For Reddit dataset, 
+ - dL will be an n x n x 12 tensor
+- L will be an n x n matrix, where n = 35776
+
+beta is 1x1 float64
+alphas is 1x11 float64
+"""
+function laplacian_attributed(beta, alphas)
+    A = getBodyWeightedAdj()
+    Pn = normalizeAttributes(getBodyAttributeAdj())
+    PLayers = [getLayer(Pn, i) for i =1:length(alphas)]
+
+    dbeta = similar(A)
+    dalphas = 
+    
+    L = similar(A)
+    L = L + beta *  
+    
+    derivs = []
+
+    for i = 1:length(P[0])
+
+        push!(derivs, 1)
+    end
+
+    return L, dL
+end
 
 
 
