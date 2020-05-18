@@ -78,6 +78,24 @@ function getLayer(Pn, k)
 end
 
 """
+b is a 1D array of sparse matrices of size (m, n)
+"""
+function sparseDot(a, b)
+    try 
+        @assert length(a) == length(b)
+    catch e 
+        @info "length a",   length(a)
+        @info "length b", length(b)
+    end
+    m, n = size(b[1])
+    res = spzeros(m, n)
+    for i = 1:length(a)
+        res = res + a[i] * b[i]
+    end
+    return res
+end
+
+"""
 For Reddit dataset, 
  - dL will be an n x n x 12 tensor
 - L will be an n x n matrix, where n = 35776
@@ -90,21 +108,20 @@ function laplacian_attributed(beta, alphas)
     Pn = normalizeAttributes(getBodyAttributeAdj())
     PLayers = [getLayer(Pn, i) for i =1:length(alphas)]
 
-    dbeta = similar(A)
-    dalphas = 
-    
-    L = similar(A)
-    L = L + beta *  
-    
-    derivs = []
+    dbeta = sparseDot(alphas, PLayers)
+    dalphas = beta * [PLayers[i] for i = 1:length(alphas)]
 
-    for i = 1:length(P[0])
-
-        push!(derivs, 1)
-    end
+    L = A + beta * dbeta 
+    dL = cat([dbeta], dalphas, dims = 1)
 
     return L, dL
 end
+
+function laplacian_attributed_L(params)
+    L, dL = laplacian_attributed(params[1], params[2:end])
+end
+
+
 
 
 

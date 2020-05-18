@@ -136,12 +136,11 @@ function loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothi
     K = Array{Float64, 2}(undef, ntrain, ntrain)
     K = pairwise!(K, SqEuclidean(), Vhat_train_Y, dims=1)
     loss = dot(Apm, K) ./ 2
-
     # compute d(Y(θ))
     if dimθ == 1
         # dH = I_rows == nothing ? Vhat' * dL * Vhat : (Vhat[I_rows, :])' * (dL[I_rows, ] * Vhat)
         dH = Vhat' * dL * Vhat
-    else
+    else 
         dH = Array{Float64, 3}(undef, m, m, dimθ)
         @tensor dH[i,j,k] = Vhat'[i, s] * dL[s, l, k] * Vhat[l, j] 
     end
