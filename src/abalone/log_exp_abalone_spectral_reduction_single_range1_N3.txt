@@ -1,0 +1,1 @@
+./abalone_exp1.sh: 30: ./abalone_exp1.sh: $: not found

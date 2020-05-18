@@ -1,0 +1,192 @@
+
+2020-05-15T02:48:43.009, randseed: 1234 
+Data set: abalone  number of testing points: 2500 
+Algorithm: Kmeans 
+    Time cost:                                   0.08562
+    Accuracy (ACC):                              0.14480
+    Adjusted Rand index:                         0.04459
+    Rand index (agreement probability):          0.86714
+    Mirkin's index (disagreement probability):   0.13286
+    Hubert's index P(agree) - P(disagree):       0.73428 
+
+2020-05-15T03:01:24.475, randseed: 1234 
+Data set: abalone  number of testing points: 2500 
+Algorithm: TSNE(dim=2) + Kmeans 
+    Time cost:                                   10.55092
+    Accuracy (ACC):                              0.14120
+    Adjusted Rand index:                         0.03760
+    Rand index (agreement probability):          0.87083
+    Mirkin's index (disagreement probability):   0.12917
+    Hubert's index P(agree) - P(disagree):       0.74166 
+
+2020-05-15T03:06:51.061, randseed: 1234 
+Data set: abalone  number of testing points: 2500 
+Algorithm: Spectral (fixed θ=1.0) + Kmeans 
+    Time cost:                                   0.30260
+    Accuracy (ACC):                              0.19480
+    Adjusted Rand index:                         0.06727
+    Rand index (agreement probability):          0.85116
+    Mirkin's index (disagreement probability):   0.14884
+    Hubert's index P(agree) - P(disagree):       0.70233 
+
+2020-05-15T03:10:57.118, randseed: 1234 
+Data set: abalone  number of testing points: 2500 
+Algorithm: Spectral (fixed θ=1000.0) + Kmeans 
+    Time cost:                                   0.22843
+    Accuracy (ACC):                              0.17920
+    Adjusted Rand index:                         0.04131
+    Rand index (agreement probability):          0.84585
+    Mirkin's index (disagreement probability):   0.15415
+    Hubert's index P(agree) - P(disagree):       0.69171 
+
+2020-05-15T17:24:25.433, randseed: 1234 
+Data set: abalone  number of testing points: 2500; number of training data: 250
+Algorithm: Spectral (fixed θ=1011.8) + Kmeans 
+    Time cost:                                   0.19182
+    Accuracy (ACC):                              0.17120
+    Adjusted Rand index:                         0.04136
+    Rand index (agreement probability):          0.84565
+    Mirkin's index (disagreement probability):   0.15435
+    Hubert's index P(agree) - P(disagree):       0.69131 
+
+2020-05-15T17:48:30.206, randseed: 1234 
+Data set: abalone  number of testing points: 4000; number of training data: 400
+Algorithm: Spectral (fixed θ=1258.029) + Kmeans 
+    Time cost:                                   0.25845
+    Accuracy (ACC):                              0.20500
+    Adjusted Rand index:                         0.04017
+    Rand index (agreement probability):          0.80058
+    Mirkin's index (disagreement probability):   0.19942
+    Hubert's index P(agree) - P(disagree):       0.60116 
+
+2020-05-15T22:20:03.388, randseed: 1234 
+Data set: abalone  number of testing points: 2500; number of training data: 250
+Algorithm: Supervised Spectral (trained θ=199.9999970195217) + Kmeans 
+    Time cost:                                   2.84030
+    Accuracy (ACC):                              0.17520
+    Adjusted Rand index:                         0.04924
+    Rand index (agreement probability):          0.85244
+    Mirkin's index (disagreement probability):   0.14756
+    Hubert's index P(agree) - P(disagree):       0.70487 
+
+
+#######################################################################
+2020-05-15T23:30:38.364, randseed: 1234 
+Data set: abalone  number of testing points: 4177; number of training data: 417
+Algorithm: Kmeans 
+    Time cost:                                   0.09703
+    Accuracy (ACC):                              0.14335
+    Adjusted Rand index:                         0.04469
+    Rand index (agreement probability):          0.86678
+    Mirkin's index (disagreement probability):   0.13322
+    Hubert's index P(agree) - P(disagree):       0.73356 
+
+2020-05-16T00:02:22.4, randseed: 1234 
+Data set: abalone  number of testing points: 4177; number of training data: 417
+Algorithm: TSNE(dim=2) + Kmeans 
+    Time cost:                                   29.89483
+    Accuracy (ACC):                              0.12926
+    Adjusted Rand index:                         0.03738
+    Rand index (agreement probability):          0.87219
+    Mirkin's index (disagreement probability):   0.12781
+    Hubert's index P(agree) - P(disagree):       0.74437 
+
+2020-05-16T00:07:15.077, randseed: 1234 
+Data set: abalone  number of testing points: 4177; number of training data: 417
+Algorithm: Supervised Spectral (trained θ=1237.7024119166472) + Kmeans 
+    Time cost:                                   3.17012
+    Accuracy (ACC):                              0.20505
+    Adjusted Rand index:                         0.04902
+    Rand index (agreement probability):          0.82010
+    Mirkin's index (disagreement probability):   0.17990
+    Hubert's index P(agree) - P(disagree):       0.64019 
+
+2020-05-17T01:34:48.033, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 417
+rangeθ: [0.1 200.0], dimθ: 1 
+Algorithm: Supervised Spectral (trained θ=27.514692379579042) + Kmeans 
+    Time cost:                                   131.97553
+    Accuracy (ACC):                              0.19468
+    Adjusted Rand index:                         0.05668
+    Rand index (agreement probability):          0.84721
+    Mirkin's index (disagreement probability):   0.15279
+    Hubert's index P(agree) - P(disagree):       0.69443 
+
+2020-05-17T03:43:59.162, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 417
+rangeθ: [0.1 100.0], dimθ: 1 
+Algorithm: Supervised Spectral (trained θ=27.514692438337022) + Kmeans 
+    Time cost:                                   127.34833
+    Accuracy (ACC):                              0.18457
+    Adjusted Rand index:                         0.05888
+    Rand index (agreement probability):          0.84854
+    Mirkin's index (disagreement probability):   0.15146
+    Hubert's index P(agree) - P(disagree):       0.69708 
+
+2020-05-17T05:45:54.274, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 417
+rangeθ: [1.0 200.0], dimθ: 1 
+Algorithm: Supervised Spectral (trained θ=24.54251278933457) + Kmeans 
+    Time cost:                                   120.06045
+    Accuracy (ACC):                              0.18191
+    Adjusted Rand index:                         0.05811
+    Rand index (agreement probability):          0.85051
+    Mirkin's index (disagreement probability):   0.14949
+    Hubert's index P(agree) - P(disagree):       0.70103 
+
+2020-05-17T07:15:04.899, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 417
+rangeθ: [1.0 1000.0], dimθ: 1 
+Algorithm: Supervised Spectral (trained θ=265.6448846189154) + Kmeans 
+    Time cost:                                   87.22020
+    Accuracy (ACC):                              0.20239
+    Adjusted Rand index:                         0.05378
+    Rand index (agreement probability):          0.83024
+    Mirkin's index (disagreement probability):   0.16976
+    Hubert's index P(agree) - P(disagree):       0.66048 
+
+2020-05-17T08:40:16.647, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 417
+rangeθ: [1.0 2000.0], dimθ: 1 
+Algorithm: Supervised Spectral (trained θ=1237.7024119166472) + Kmeans 
+    Time cost:                                   83.21177
+    Accuracy (ACC):                              0.21037
+    Adjusted Rand index:                         0.03945
+    Rand index (agreement probability):          0.80005
+    Mirkin's index (disagreement probability):   0.19995
+    Hubert's index P(agree) - P(disagree):       0.60010 
+
+# this is manually computed in notebook, record results here -- do get same level of accuracy
+2020-05-16T22:37:30.5, randseed: 1234 
+Data set: abalone  number of testing points: 4000; number of training data: 400
+rangeθ: [1.0 200.0]; dimθ: 1; N_sample: 1000; m: 149
+Algorithm: Supervised Spectral (trained θ=24.902512275216754) with model reduction + Kmeans 
+    Time cost:                                   82min sampling Vhat; 5min training θ
+    Accuracy (ACC):                              0.18722
+    Adjusted Rand index:                         0.06268
+    Rand index (agreement probability):          0.84684
+    Mirkin's index (disagreement probability):   0.15316
+    Hubert's index P(agree) - P(disagree):       0.69367
+
+2020-05-17T16:31:20, randseed: 1234 
+Data set: abalone  number of testing points: 4177; number of training data: 417
+rangeθ: [0.1 200.0], dimθ: 1; N_sample: 1500, m: 156
+Algorithm: Supervised Spectral (trained θ=27.514062404290453) with model reduction + Kmeans 
+    Time cost:                                   150min sampling Vhat; 7min training θ
+    Accuracy (ACC):                              0.19947
+    Adjusted Rand index:                         0.05829
+    Rand index (agreement probability):          0.84493
+    Mirkin's index (disagreement probability):   0.15507
+    Hubert's index P(agree) - P(disagree):       0.68987
+
+
+2020-05-17T19:48:21.695, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 417
+rangeθ: [0.1 200.0], dimθ: 1; N_sample: 1500; m: 156 
+Algorithm: Spectral clustering with model reduction (trained θ = 27.51406281428194) 
+    Time cost:                                   165.49100
+    Accuracy (ACC):                              0.18910
+    Adjusted Rand index:                         0.05942
+    Rand index (agreement probability):          0.84466
+    Mirkin's index (disagreement probability):   0.15534
+    Hubert's index P(agree) - P(disagree):       0.68933 

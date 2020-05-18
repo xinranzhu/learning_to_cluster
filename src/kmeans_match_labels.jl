@@ -28,7 +28,7 @@ function ACC_match_labels(assignment, actual_labels, k, dataset)
     return current_acc, current_matched_assignment
 end
 
-function bipartite_match_labels(assignment, actual_labels, k)
+function bipartite_match_labels(assignment, actual_labels, k; ntrain = 0)
     # how many nodes in cluster i have true label j
     # cost of assigning i to label j
     function cost(i, j)
@@ -44,7 +44,7 @@ function bipartite_match_labels(assignment, actual_labels, k)
     mapping, mincost = hungarian(weights)
     mapping_fun(i) = mapping[i]
     bip_assignment = mapping_fun.(assignment)
-    acc = mean(bip_assignment .== actual_labels)
+    acc = mean(bip_assignment[ntrain+1:end] .== actual_labels[ntrain+1:end])
     return acc, bip_assignment
 end
 
