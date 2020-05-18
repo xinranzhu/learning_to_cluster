@@ -49,7 +49,7 @@ s = ArgParseSettings()
     "--trainratio"
         help = "ratio of training set to testing set"
         arg_type = Float64
-        default = 0.05
+        default = 0.1
     "--reduction"
         help = "use model reduction or not"
         action = :store_true
@@ -90,6 +90,7 @@ if n > size(data, 1)
 end
 X = data[1:n, :]
 y = label[1:n]
+d = size(X, 2)
 @info "Size of testing data" size(X), size(y)
 # select a fraction of X to be training data
 ntrain = Int(floor(n*parsed_args["trainratio"]))
@@ -110,24 +111,28 @@ if parsed_args["reduction"]
     end
 else # do normal clustering, using plain kmeans or TSNE+kmeans or spectral clustering + kmeans
     algorithm = "Kmeans"
+    Xnew = X
     if parsed_args["TSNE"]
         println("Start TSNE")
-        X = mytsne(X, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
+        Xnew = mytsne(X, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
         algorithm = "TSNE(dim=$(parsed_args["dimY"])) + Kmeans"
     elseif parsed_args["spectral"] 
         println("Start spectral clustering")
         if parsed_args["specparam"] > 0 # if given a fixed param
-            X = spectral_clustering_model(X, k, parsed_args["specparam"]) 
+            Xnew, _ = spectral_clustering_model(X, k, parsed_args["specparam"]) 
             algorithm = "Spectral (fixed θ=$(parsed_args["specparam"])) + Kmeans"
         else
-            X, θ = spectral_clustering_main(X, Xtrain, ytrain, k) #TODO 
+            rangeθs = [1 2000]
+            rangeθm = rangesm = repeat(rangeθs, d, 1)
+            rangeθ = rangeθs
+            Xnew, θ = spectral_clustering_main(X, Xtrain, ytrain, k, rangeθ) 
             algorithm = "Supervised Spectral (trained θ=$θ) + Kmeans"
         end
     end
     # K-means clustering
     println("Start K-means")
     # warning the matrix put into kmeans should be d*N
-    R = kmeans(X', k; maxiter=200, display=:final)
+    R = kmeans(Xnew', k; maxiter=200, display=:final)
     @assert nclusters(R) == k # verify the number of clusters
     assignment = assignments(R) # get the assignments of points to clusters
 end
@@ -144,7 +149,7 @@ RI = randindex(matched_assignment, y)
 
 io = open("$(parsed_args["dataset"])_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
-write(io, "Data set: $(parsed_args["dataset"])  number of testing points: $n \n") 
+write(io, "Data set: $(parsed_args["dataset"])  number of testing points: $n; number of training data: $ntrain\n") 
 write(io, "Algorithm: $algorithm 
     Time cost:                                   $(@sprintf("%.5f", elapsedmin))
     Accuracy (ACC):                              $(@sprintf("%.5f", max_acc))

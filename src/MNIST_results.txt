@@ -141,3 +141,13 @@ Algorithm: Kmeans
     Rand index (agreement probability):          0.88975
     Mirkin's index (disagreement probability):   0.11025
     Hubert's index P(agree) - P(disagree):       0.77950 
+
+2020-05-15T02:04:53.041, randseed: 1234 
+Data set: MNIST  number of testing points: 2500 
+Algorithm: TSNE(dim=2) + Kmeans 
+    Time cost:                                   9.53415
+    Accuracy (ACC):                              0.72560
+    Adjusted Rand index:                         0.61766
+    Rand index (agreement probability):          0.92858
+    Mirkin's index (disagreement probability):   0.07142
+    Hubert's index P(agree) - P(disagree):       0.85716 

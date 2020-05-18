@@ -29,6 +29,8 @@ data = convert(Matrix, df[:,2:8])
 label = convert(Array, df[:, 2]) 
 k = 29
 
+@info "Size of whole dataset: " size(data), size(label)
+
 # shuffle data: n * d
 randseed = 1234; rng = MersenneTwister(randseed)
 ind_shuffle = randperm(rng, size(data, 1))
@@ -36,8 +38,9 @@ data = data[ind_shuffle, :];
 label = label[ind_shuffle]
 @info size(data)
 
-X = data[1:300, :]; n, d = size(X)
-y = label[1:300]
+X = data[1:2000, :]; n, d = size(X)
+y = label[1:2000]
+@info "Size of testing data" size(X), size(y)
 # select a fraction to be training data
 ntrain = Int(floor(n*0.2))
 idtrain = 1:ntrain
@@ -46,7 +49,7 @@ ytrain = y[idtrain]
 
 # compute Vhat and Vhatm
 @info "Computing Vhat"
-N_sample = 100
+N_sample = 500
 ranges = [500 3000]
 rangesm = repeat([500 3000], d, 1)
 
@@ -60,11 +63,11 @@ Apm = gen_constraints(Xtrain, ytrain)
 loss(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[1] 
 loss_deriv(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[2] 
 
-lossm(θ) = loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhatm)[1] 
-loss_derivm(θ) = loss_fun_reduction(θ, Xtrain, idtrain, Apm, k, Vhatm)[2] 
+lossm(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhatm)[1] 
+loss_derivm(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhatm)[2] 
 
 @info "Start 1d derivative test"
-ntest = 100; h = 1e-5
+ntest = 10; h = 1e-5
 deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
 dYtest_fd = deriv_fd(loss, h)
 θgrid = range(ranges[1], stop=ranges[2], length=ntest)
@@ -76,13 +79,12 @@ err1 = norm(loss.(θgrid .+ h) - loss.(θgrid) - h .* loss_deriv.(θgrid)) # O(h
 @info "Start multi-dim derivative test"
 m = size(Vhatm, 2)
 θgrid = rand(Uniform(ranges[1], ranges[2]), d, ntest)
-dlh = Array{Float64, 2}(undef, m, k)
 err2 = 0.
 hvec = h .* ones(d)
 for i in 1:ntest
     global err2
     θ = θgrid[:, i]
-    @tensor dlh[l, j] = loss_derivm(θ)[l, j, k] * hvec[k]
+    dlh = dot(loss_derivm(θ), hvec)
     err_current = norm(lossm(θ .+ h) - lossm(θ) - dlh) # O(h^2)
 #     err_current = norm(fun_L(θ .+ h) - fun_L(θ .- h) - 2 .* dLh) # O(h^3)
     # @info err_current
