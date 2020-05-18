@@ -1,30 +1,32 @@
-using Optim
-
+# using Optim
+include("helpers.jl")
 include("../kernels/kernels.jl")
 include("comp_deriv.jl")
 
 # train an optimal θ
 # Xtrain is a small portion of X, with known label ytrain
-function spectral_clustering_main(X, Xtrain, ytrain, k, rangeθ)
+function spectral_clustering_main(X::Array{T, 2}, k::Int, traindata::TrainingData, rangeθ::Array{T, 2})
     dimθ = size(rangeθ, 1)
-    ntrain, d= size(Xtrain)
-    ntotal = size(X)
+    ntrain = traindata.n
+    Apm = traindata.Apm
+    ntotal, d = size(X, d)
     # generate constraints matrix Apm 
     Apm = gen_constraints(Xtrain, ytrain)
     # optimize loss fun
-    loss(θ) = loss_fun(θ, X, Xtrain, idtrain, Apm, k)[1] 
-    loss_deriv(θ) = loss_fun(θ, X, Xtrain, idtrain, Apm, k)[2] 
+    loss(θ) = loss_fun(X, k, θ, traindata; if_deriv = false)[1] 
+    loss_deriv(θ) = loss_fun(X, k, θ, traindata)[2] 
     function loss_deriv!(G, θ) 
-        G = loss_fun(θ, X, Xtrain, idtrain, Apm, k)[2] 
+        G = loss_fun(X, k, θ, traindata)[2] 
     end
     @info "Start training"
     if dimθ == 1
-        results = Optim.optimize(loss, loss_deriv!, rangeθ[1, 1], rangeθ[1, 2])
-        θ = Optim.minimum(results)
+        results = Optim.optimize(loss, rangeθ[1, 1], rangeθ[1, 2])
+        θ = Optim.minimizer(results)
     else
         θ_init = rand(Uniform(rangeθ[1, 1], rangeθ[1, 2]), dimθ, 1)
-        results = Optim.optimize(loss, loss_deriv!, θ_init)
-        θ = Optim.minimum(results)
+        inner_optimizer = LBFGS()
+        results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
+        θ = Optim.minimizer(results)
     end
     @info "Finish training, optimal θ" θ
     # Compute eigenvectors on Xtest using the optimal θ 
@@ -33,16 +35,15 @@ function spectral_clustering_main(X, Xtrain, ytrain, k, rangeθ)
 end
 
 
-function spectral_clustering_model(X, k, θ; deriv = false)
+function spectral_clustering_model(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}; if_deriv::Bool = true)
     # @info "enter spectral clustering model"
     n, d = size(X)
     dimθ = length(θ)
     # generate the Laplacian matrix
-    L, dL = laplacian_L(X, θ)
-    @info size(L), θ
+    L, dL = laplacian_L(X, θ; if_deriv = if_deriv)
+    @info "size(L) and current θ " size(L), θ
     # @info "finish computing L, dL" size(L), size(dL)
     # compute k eigenvectors, store in V
-    
     ef = eigen(Symmetric(L), n-k+1:n)
     V = ef.vectors
     Λ = ef.values
@@ -50,9 +51,8 @@ function spectral_clustering_model(X, k, θ; deriv = false)
     @assert size(V, 2) == k # make sure returns k eigenvectors
     # @info "finish computing V" size(V)
 
-
     # compute dV
-    dV = deriv ? comp_dY_L(V, Λ, L, dL, dimθ) : nothing
+    dV = if_deriv ? comp_dV_L(V, Λ, L, dL, dimθ) : nothing
     # @info "finish computing dV" 
 
     # normalize rows of V
@@ -61,16 +61,16 @@ function spectral_clustering_model(X, k, θ; deriv = false)
     return V, dV 
 end
 
-function loss_fun(θ, X, Xtrain, idtrain, Apm, k; if_dloss = false)
+function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::TrainingData; if_deriv::Bool = true)
     ntrain, d = size(Xtrain)
     n = size(X, 1)
     dimθ = length(θ)
     @assert size(Apm) == (ntrain, ntrain)
-    if if_dloss 
-        # compute clustering
-        V, dV = spectral_clustering_model(X, k, θ; deriv = true)
-        @assert size(V) == (n, k)
-        V_train = V[idtrain, :]
+    # compute clustering
+    V, dV = spectral_clustering_model(X, k, θ)
+    @assert size(V) == (n, k)
+    V_train = V[idtrain, :]
+    if if_deriv 
         dV_train = reshape(dV, n, k, dimθ)[idtrain, :, :]
         # derivative
         K1 = broadcast(-, reshape(V_train, ntrain, 1, k, 1), reshape(V_train, 1, ntrain, k, 1))
@@ -83,9 +83,6 @@ function loss_fun(θ, X, Xtrain, idtrain, Apm, k; if_dloss = false)
         dloss = reshape(sum(dloss; dims=[1, 2]), dimθ)
         dloss = dimθ == 1 ? dloss[1] : dloss
     else
-        V, _ = spectral_clustering_model(X, k, θ)
-        V_train = V[idtrain, :]
-        @assert size(V) == (n, k)
         dloss = nothing
     end
     K = Array{Float64, 2}(undef, ntrain, ntrain)
@@ -94,7 +91,7 @@ function loss_fun(θ, X, Xtrain, idtrain, Apm, k; if_dloss = false)
     return loss, dloss
 end
 
-function comp_dY_L(V, Λ, L, dL, dimθ)
+function comp_dV_L(V, Λ, L, dL, dimθ)
     n, k = size(V)
     dV = Array{Float64, 3}(undef, n, k, dimθ)
     for i in 1:k 

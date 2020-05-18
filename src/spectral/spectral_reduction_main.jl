@@ -1,8 +1,10 @@
 # train an optimal θ
 # Xtrain is a small portion of X, with known label ytrain
 include("helpers.jl")
+include("../kernels/kernels.jl")
+include("comp_deriv.jl")
 
-using Optim
+# using Optim
 using Distances
 using Dates
 
@@ -13,38 +15,43 @@ X:
 Xtrain:
 ytrain: 
 """
-function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
-
+function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, rangeθ::Array{T, 2}; 
+                                traindata::Union{TrainingData, Nothing} = nothing, Vhat_set::Union{NamedTuple, Nothing} = nothing) where T<:Float64
     # compute Vhat 
-    @info "Start computing Vhat"
-    before = Dates.now()
-    Vhat, I_rows = comp_Vhat(X, k, rangeθ) 
-    m = size(Vhat, 2)
-    @assert m > k 
-    after = Dates.now()
-    elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
-    @info "Vhat size, time cost", size(Vhat), elapsedmin
-
+    if Vhat_set == nothing # sample it now
+        @info "Start computing Vhat"
+        Vhat, I_rows = comp_Vhat(X, k, rangeθ) 
+        @info "Vhat size, time cost", size(Vhat)
+    else
+        Vhat = Vhat_set.Vhat
+        I_rows = Vhat_set.I_rows
+        @assert Vhat_set.rangeθ == rangeθ # make sure Vhat is from same setting
+    end
     n, d = size(X)
     dimθ = length(θ)
+    m = size(Vhat, 2)
+    @assert m > k 
     # l_rows = I_rows == nothing ? n : length(I_rows)
     # train an optimal θ value if have training set
-    if Xtrain != nothing && ytrain != nothing 
+    if traindata != nothing 
         before = Dates.now()
-        ntrain, dtrain= size(Xtrain)
-        ntotal = size(X)
-        # generate constraints matrix Apm 
-        Apm = gen_constraints(Xtrain, ytrain)  #constraint matrix
-        # optimize loss fun
         @info "Start training θ"
-        loss(θ) = loss_fun_reductionloss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[1] 
-        loss_deriv(θ) = loss_fun_reductionloss_fun_reduction(θ,  X, Xtrain, idtrain, Apm, k, Vhat)[2] 
+        loss(θ) = loss_fun_reduction(X, k, θ, traindata, Vhat; if_deriv = false)[1] 
+        loss_deriv(θ) = loss_fun_reduction(X, k, θ, traindata, Vhat)[2] 
         function loss_deriv!(G, θ)
             G = loss_deriv(θ)
         end
-        θ_init = rand(Uniform(rangeθ[1], rangeθ[2]), dimθ)
-        results = optimize((loss, loss_deriv!, θ_init))
-        θ = Optim.minimum(results)
+        @info "Start training"
+        if dimθ == 1
+            results = Optim.optimize(loss, rangeθ[1, 1], rangeθ[1, 2])
+            θ = Optim.minimizer(results)
+        else
+            θ_init = rand(Uniform(rangeθ[1, 1], rangeθ[1, 2]), dimθ, 1)
+            inner_optimizer = LBFGS()
+            results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
+            θ = Optim.minimizer(results)
+        end
+        @info "Finish training, optimal θ" θ
         after = Dates.now()
         elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
         @info "Trained θ, time cost " θ, elapsedmin
@@ -52,7 +59,7 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
 
     before = Dates.now()
     # compute H 
-    L, _ = laplacian_L(X, θ, I_rows) 
+    L, dL = laplacian_L(X, θ; I_rows = I_rows, if_deriv = false) 
     H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
     @assert size(H) == (m, m) 
 
@@ -66,10 +73,11 @@ function spectral_reduction_main(X, k, θ, Xtrain = nothing, ytrain = nothing)
     # put Vhat*Y into kmeans
     @info "Start kmeans"
     @time a =  kmeans_reduction(Vhat, Y, k; maxiter = 200)    
-    return a
+    return a, θ
 end
 
-function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = false, num_rows = nothing)
+function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false) where T<:Float64
+    # before = Dates.now()
     n, d = size(X)
     dimθ = size(rangeθ, 1)
     @assert size(rangeθ, 2) == 2 
@@ -79,7 +87,7 @@ function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = fal
     Vhat_sample = Array{Float64, 2}(undef, n, k*N_sample)
     for i in 1:N_sample
         θ = N[i, :]
-        L, _ = laplacian_L(X, θ)
+        L, dL = laplacian_L(X, θ; if_deriv = false)
         ef = eigen(Symmetric(L), n-k+1:n)
         Vhat_sample[:, (i-1)*k+1: i*k] = ef.vectors
     end
@@ -107,7 +115,7 @@ function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = fal
         err = 0.
         for i in 1:N_sample
             θ = N[i, :]
-            L, _= laplacian_L(X, θ)
+            L = laplacian_L(X, θ; if_deriv=false)[1]
             Htrue = Vhat' * L * Vhat
             H = @views Vhat[I_rows, :]' * L[I_rows, :] * Vhat
             err_cur = norm(Htrue - H)/norm(Htrue)
@@ -116,56 +124,71 @@ function comp_Vhat(X, k, rangeθ; N_sample = 100, precision = 0.995, debug = fal
         @info "Error from partial rows:" err
     end
     I_rows = nothing
+    # after = Dates.now()
+    # elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
+    # Vhat_set = (Vhat = Vhat, range = rangeθ, I_rows = I_rows, N_sample = N_sample, timecost = elapsedmin)
+    # save("testVhat.jld", "data", Vhat_set)
+    # to check or use later
+    # load("testVhat.jld")["data"]
     return Vhat, I_rows
 end
 
-function loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat; I_rows = nothing)
+function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::TrainingData, Vhat::Array{T, 2}; 
+                            I_rows::Union{Array{Int64,1}, Nothing} = nothing, if_deriv::Bool = true) where T<:Float64
+    @info "Evaluate loss func, current θ" θ
     dimθ = length(θ)
-    ntrain, d = size(Xtrain)
     n, m = size(Vhat)
+    ntrain = traindata.n
+    Apm = traindata.Apm
     # compute Y(θ)
-    L, dL = laplacian_L(X, θ) 
+    L, dL = laplacian_L(X, θ; if_deriv = if_deriv) 
     H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
     @assert size(H) == (m, m) 
     ef = eigen(Symmetric(H), m-k+1:m)
     Y = ef.vectors 
     Λ = ef.values
     # select training indices
-    Vhat_train_Y = Vhat[idtrain, :] * Y
+    Vhat_train_Y = @view Vhat[1:ntrain, :] * Y
     # compute loss
     K = Array{Float64, 2}(undef, ntrain, ntrain)
     K = pairwise!(K, SqEuclidean(), Vhat_train_Y, dims=1)
     loss = dot(Apm, K) ./ 2
-
-    # compute d(Y(θ))
-    if dimθ == 1
-        # dH = I_rows == nothing ? Vhat' * dL * Vhat : (Vhat[I_rows, :])' * (dL[I_rows, ] * Vhat)
-        dH = Vhat' * dL * Vhat
-    else
-        dH = Array{Float64, 3}(undef, m, m, dimθ)
-        @tensor dH[i,j,k] = Vhat'[i, s] * dL[s, l, k] * Vhat[l, j] 
-    end
-    dY = comp_dY(Y, Λ, H, dH, dimθ)
-    if dimθ == 1
-        Vhat_train_Y = Vhat[idtrain, :] * Y
-        Vhat_train_dY = Vhat[idtrain, :] * dY
-        # K = Array{Float64, 2}(undef, ntrain, ntrain)
-        K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
-        dloss = dot(Apm, K)
-    else
-        dloss = Array{Float64, 1}(undef, dimθ)
-        Vhat_train_Y1 = @views Vhat[idtrain, :] * Y
-        for i in 1:dimθ
-            Vhat_train_dY = @views Vhat[idtrain, :] * dY[:, :, i]
-            K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
-            dloss[i] = dot(Apm, K)
+    if if_deriv
+        # compute d(Y(θ))
+        if dimθ == 1
+            # dH = I_rows == nothing ? Vhat' * dL * Vhat : (Vhat[I_rows, :])' * (dL[I_rows, ] * Vhat)
+            dH = Vhat' * dL * Vhat
+        else
+            dH = Array{Float64, 3}(undef, m, m, dimθ)
+            @tensor dH[i,j,k] = Vhat'[i, s] * dL[s, l, k] * Vhat[l, j] 
         end
-        dloss = reshape(dloss, dimθ)
+        dY = comp_dY(Y, Λ, H, dH, dimθ)
+        if dimθ == 1
+            Vhat_train_Y = Vhat[1:ntrain, :] * Y
+            Vhat_train_dY = Vhat[1:ntrain, :] * dY
+            # K = Array{Float64, 2}(undef, ntrain, ntrain)
+            K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
+            dloss = dot(Apm, K)
+        else
+            dloss = Array{Float64, 1}(undef, dimθ)
+            Vhat_train_Y1 = Vhat[1:ntrain, :] * Y
+            for i in 1:dimθ
+                Vhat_train_dY = @views Vhat[1:ntrain, :] * dY[:, :, i]
+                K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
+                dloss[i] = dot(Apm, K)
+            end
+            dloss = reshape(dloss, dimθ)
+        end
+    else 
+        dloss = nothing
     end
     return loss, dloss
 end
 
-function comp_dY(Y, Λ, H, dH, dimθ)
+
+
+
+function comp_dY(Y::Array{T, 2}, Λ::Array{T, 1}, H::Array{T, 2}, dH::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64) where T<:Float64
     m, k = size(Y)
     dY = Array{Float64, 3}(undef, m, k, dimθ)
     for i in 1:k
@@ -183,8 +206,8 @@ function comp_dY(Y, Λ, H, dH, dimθ)
     return dY
 end
 
-function kmeans_reduction(Vhat, Y, k; maxiter = 200)    
-    R = kmeans((Vhat*Y)', k; maxiter=maxiter, display=:iter)
+function kmeans_reduction(Vhat::Array{T, 2}, Y::Array{T, 2}, k::Int; maxiter::Int = 200) where T<:Float64
+    R = kmeans((Vhat*Y)', k; maxiter=maxiter, display=:final)
     @assert nclusters(R) == k # verify the number of clusters
     a = assignments(R) # get the assignments of points to clusters
     return a

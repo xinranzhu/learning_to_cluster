@@ -14,8 +14,8 @@ using DataFrames
 using CSV
 using TensorOperations
 
-include("comp_deriv.jl")
-include("../kernels/kernels.jl")
+# include("comp_deriv.jl")
+# include("../kernels/kernels.jl")
 include("spectral_reduction_main.jl")
 
 # MNIST
@@ -38,8 +38,8 @@ data = data[ind_shuffle, :];
 label = label[ind_shuffle]
 @info size(data)
 
-X = data[1:2000, :]; n, d = size(X)
-y = label[1:2000]
+X = data[1:4177, :]; n, d = size(X)
+y = label[1:4177]
 @info "Size of testing data" size(X), size(y)
 # select a fraction to be training data
 ntrain = Int(floor(n*0.2))
@@ -50,8 +50,9 @@ ytrain = y[idtrain]
 # compute Vhat and Vhatm
 @info "Computing Vhat"
 N_sample = 500
-ranges = [500 3000]
-rangesm = repeat([500 3000], d, 1)
+rangeθ = [1 3000]
+ranges = rangeθ
+rangesm = repeat(rangeθ, d, 1)
 
 Vhat, _ = comp_Vhat(X, k, ranges; N_sample = 500)
 @info "Size Vhat:" size(Vhat)
@@ -60,11 +61,11 @@ Vhatm, _ = comp_Vhat(X, k, rangesm; N_sample = 500)
 
 Apm = gen_constraints(Xtrain, ytrain) 
 
-loss(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[1] 
-loss_deriv(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat)[2] 
+loss(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat; if_deriv = false)[1] 
+loss_deriv(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhat; if_deriv = true)[2] 
 
-lossm(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhatm)[1] 
-loss_derivm(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhatm)[2] 
+lossm(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhatm; if_deriv = false)[1] 
+loss_derivm(θ) = loss_fun_reduction(θ, X, Xtrain, idtrain, Apm, k, Vhatm; if_deriv = false)[2] 
 
 @info "Start 1d derivative test"
 ntest = 10; h = 1e-5

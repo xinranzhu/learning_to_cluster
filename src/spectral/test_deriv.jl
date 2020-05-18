@@ -5,8 +5,8 @@ using Random
 using DataFrames
 using CSV
 
-include("comp_deriv.jl")
-include("../kernels/kernels.jl")
+# include("comp_deriv.jl")
+# include("../kernels/kernels.jl")
 include("spectral_reduction_main.jl")
 
 # MNIST
@@ -23,13 +23,13 @@ ind_shuffle = randperm(rng, size(data, 1))
 data = data[ind_shuffle, :]
 
 ###########################################################
-X = data[1:2500, :]; n, d = size(X)
-ntest = 1; h = 1e-5
+X = data[1:4177, :]; n, d = size(X)
+ntest = 100; h = 1e-5
 I_rows = nothing
 # I_rows = randperm(n)[1:Int(floor(n/2))]
 
-fun_A(θ) = laplacian_L(X, θ; I_rows = I_rows, debug = true)[5]
-deriv_A(θ) =  laplacian_L(X, θ; I_rows = I_rows, debug = true)[6]
+fun_A(θ) = affinity_A(X, θ; if_deriv = false)[1]
+deriv_A(θ) =   affinity_A(X, θ)[2]
 
 # 1d parameter
 deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
@@ -60,19 +60,19 @@ end
 
 
 ############################################################
-fun_D(θ) = laplacian_L(X, θ; I_rows = I_rows, debug = true)[3]
-deriv_D(θ) =  laplacian_L(X, θ; I_rows = I_rows, debug = true)[4]
+fun_D(θ) = degree_D(X, θ; if_deriv = false)[1]
+deriv_D(θ) =  degree_D(X, θ)[2]
 
 # 1d parameter
 deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h # O(h^2)
 dDtest_fd = deriv_fd(fun_D, h)
-θgrid = range(500, stop=2000, length=ntest)
+θgrid = range(1, stop=2000, length=ntest)
 # θgrid = range(0.01, stop=2, length=ntest)
 err1 = maximum(norm.(deriv_D.(θgrid) - dDtest_fd.(θgrid))) # O(h^2)
 @info "dD, One-dim parameter: " err1
 
 # multi-dimensional parameter
-θgrid = rand(Uniform(500,2000), d, ntest)
+θgrid = rand(Uniform(1,2000), d, ntest)
 # θgrid = rand(Uniform(0.01,2), d, ntest)
 dDh = Array{Float64, 2}(undef, n1, n)
 err2 = 0.
@@ -89,8 +89,8 @@ end
 
 ############################################################
 
-fun_L(θ) = laplacian_L(X, θ; I_rows = I_rows, debug = true)[1]
-deriv_L(θ) =  laplacian_L(X, θ; I_rows = I_rows, debug = true)[2]
+fun_L(θ) = laplacian_L(X, θ; I_rows = I_rows, if_deriv = false)[1]
+deriv_L(θ) =  laplacian_L(X, θ; I_rows = I_rows)[2]
 
 # 1d parameter
 deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
