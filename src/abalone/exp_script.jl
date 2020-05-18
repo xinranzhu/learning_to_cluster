@@ -111,7 +111,8 @@ X = testdata.X; y = testdata.y
 d = testdata.d
 @info "Size of testing data" size(X), size(y)
 traindata = trainingData(X, y, parsed_args["trainratio"])
-@info "Size of training data" size(Xtrain), size(ytrain)
+ntrain = traindata.n
+@info "Size of training data" size(traindata.X), size(traindata.y), typeof(traindata)
 
 range_set = JLD.load("./saved_data/abalone_range_set.jld")["data"]
 if parsed_args["set_range"] == 0 # if no specific range setting is selected
@@ -150,25 +151,24 @@ if parsed_args["reduction"]
     end
 else # do normal clustering, using plain kmeans or TSNE+kmeans or spectral clustering + kmeans
     algorithm = "Kmeans"
-    Xnew = X
     if parsed_args["TSNE"]
         println("Start TSNE")
-        Xnew = mytsne(X, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
+        X = mytsne(X, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
         algorithm = "TSNE(dim=$(parsed_args["dimY"])) + Kmeans"
     elseif parsed_args["spectral"] 
         println("Start spectral clustering")
         if parsed_args["specparam"] > 0 # if given a fixed param
-            Xnew, _ = spectral_clustering_model(X, k, parsed_args["specparam"]) 
+            X, _ = spectral_clustering_model(X, k, parsed_args["specparam"]; if_deriv = false) 
             algorithm = "Spectral (fixed θ=$(parsed_args["specparam"])) + Kmeans"
         else
-            Xnew, θ = spectral_clustering_main(X, Xtrain, ytrain, k, rangeθ) 
+            X, θ = spectral_clustering_main(X, k, traindata, rangeθ) 
             algorithm = "Supervised Spectral (trained θ=$θ) + Kmeans"
         end
     end
     # K-means clustering
     println("Start K-means")
     # warning the matrix put into kmeans should be d*N
-    R = kmeans(Xnew', k; maxiter=200, display=:final)
+    R = kmeans(X', k; maxiter=200, display=:final)
     @assert nclusters(R) == k # verify the number of clusters
     assignment = assignments(R) # get the assignments of points to clusters
 end

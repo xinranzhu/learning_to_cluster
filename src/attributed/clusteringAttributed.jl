@@ -103,7 +103,7 @@ For Reddit dataset,
 beta is 1x1 float64
 alphas is 1x11 float64
 """
-function laplacian_attributed(beta, alphas)
+function laplacian_attributed(beta, alphas; if_deriv = true)
     A = getBodyWeightedAdj()
     Pn = normalizeAttributes(getBodyAttributeAdj())
     PLayers = [getLayer(Pn, i) for i =1:length(alphas)]
@@ -112,13 +112,14 @@ function laplacian_attributed(beta, alphas)
     dalphas = beta * [PLayers[i] for i = 1:length(alphas)]
 
     L = A + beta * dbeta 
-    dL = cat([dbeta], dalphas, dims = 1)
+    dL = if_deriv ? cat([dbeta], dalphas, dims = 1) : nothing
 
     return L, dL
 end
 
-function laplacian_attributed_L(params)
-    L, dL = laplacian_attributed(params[1], params[2:end])
+function laplacian_attributed_L(params; if_deriv = true)
+    L, dL = laplacian_attributed(params[1], params[2:end]; if_deriv = if_deriv)
+    return L, dL
 end
 
 

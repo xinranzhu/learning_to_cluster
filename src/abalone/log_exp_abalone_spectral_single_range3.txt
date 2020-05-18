@@ -1,16 +1,10 @@
-┌ Info: Size of whole dataset: 
-└   (size(data), size(label)) = ((4177, 7), (4177,))
-┌ Info: Size of testing data
-└   (size(X), size(y)) = ((4177, 7), (4177,))
-┌ Info: Size of training data
-└   (size(Xtrain), size(ytrain)) = ((417, 7), (417,))
-[ Info: Start training
-ERROR: LoadError: UndefVarError: Optim not defined
+ERROR: LoadError: LoadError: UndefVarError: TrainingData not defined
 Stacktrace:
- [1] spectral_clustering_main(::Array{Float64,2}, ::Array{Float64,2}, ::Array{Int64,1}, ::Int64, ::Array{Float64,2}) at /home/xz584/projects/learning_to_cluster/src/spectral/spectral_clustering.jl:22
- [2] top-level scope at /home/xz584/projects/learning_to_cluster/src/abalone/exp_script.jl:167
- [3] include(::Module, ::String) at ./Base.jl:377
- [4] exec_options(::Base.JLOptions) at ./client.jl:288
- [5] _start() at ./client.jl:484
-in expression starting at /home/xz584/projects/learning_to_cluster/src/abalone/exp_script.jl:131
-Start spectral clustering
+ [1] top-level scope at /home/xz584/projects/learning_to_cluster/src/spectral/spectral_clustering.jl:8
+ [2] include(::String) at ./client.jl:439
+ [3] top-level scope at /home/xz584/projects/learning_to_cluster/src/abalone/exp_script.jl:25
+ [4] include(::Module, ::String) at ./Base.jl:377
+ [5] exec_options(::Base.JLOptions) at ./client.jl:288
+ [6] _start() at ./client.jl:484
+in expression starting at /home/xz584/projects/learning_to_cluster/src/spectral/spectral_clustering.jl:8
+in expression starting at /home/xz584/projects/learning_to_cluster/src/abalone/exp_script.jl:25

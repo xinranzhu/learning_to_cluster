@@ -16,7 +16,7 @@ Xtrain:
 ytrain: 
 """
 function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, rangeθ::Array{T, 2}; 
-                                traindata::Union{TrainingData, Nothing} = nothing, Vhat_set::Union{NamedTuple, Nothing} = nothing) where T<:Float64
+                                traindata::Union{AbstractTrainingData, Nothing} = nothing, Vhat_set::Union{NamedTuple, Nothing} = nothing) where T<:Float64
     # compute Vhat 
     if Vhat_set == nothing # sample it now
         @info "Start computing Vhat"
@@ -133,7 +133,7 @@ function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int =
     return Vhat, I_rows
 end
 
-function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::TrainingData, Vhat::Array{T, 2}; 
+function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::AbstractTrainingData, Vhat::Array{T, 2}; 
                             I_rows::Union{Array{Int64,1}, Nothing} = nothing, if_deriv::Bool = true) where T<:Float64
     @info "Evaluate loss func, current θ" θ
     dimθ = length(θ)
@@ -148,7 +148,7 @@ function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, t
     Y = ef.vectors 
     Λ = ef.values
     # select training indices
-    Vhat_train_Y = @view Vhat[1:ntrain, :] * Y
+    Vhat_train_Y = (@view Vhat[1:ntrain, :]) * Y
     # compute loss
     K = Array{Float64, 2}(undef, ntrain, ntrain)
     K = pairwise!(K, SqEuclidean(), Vhat_train_Y, dims=1)
@@ -164,14 +164,12 @@ function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, t
         end
         dY = comp_dY(Y, Λ, H, dH, dimθ)
         if dimθ == 1
-            Vhat_train_Y = Vhat[1:ntrain, :] * Y
-            Vhat_train_dY = Vhat[1:ntrain, :] * dY
+            Vhat_train_dY = (@view Vhat[1:ntrain, :]) * dY
             # K = Array{Float64, 2}(undef, ntrain, ntrain)
             K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
             dloss = dot(Apm, K)
         else
             dloss = Array{Float64, 1}(undef, dimθ)
-            Vhat_train_Y1 = Vhat[1:ntrain, :] * Y
             for i in 1:dimθ
                 Vhat_train_dY = @views Vhat[1:ntrain, :] * dY[:, :, i]
                 K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)

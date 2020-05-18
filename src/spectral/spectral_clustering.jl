@@ -2,16 +2,15 @@
 include("helpers.jl")
 include("../kernels/kernels.jl")
 include("comp_deriv.jl")
+include("../datastructs.jl")
 
 # train an optimal θ
 # Xtrain is a small portion of X, with known label ytrain
-function spectral_clustering_main(X::Array{T, 2}, k::Int, traindata::TrainingData, rangeθ::Array{T, 2})
+function spectral_clustering_main(X::Array{T, 2}, k::Int, traindata::AbstractTrainingData, rangeθ::Array{T, 2}) where T<:Float64
     dimθ = size(rangeθ, 1)
     ntrain = traindata.n
     Apm = traindata.Apm
-    ntotal, d = size(X, d)
-    # generate constraints matrix Apm 
-    Apm = gen_constraints(Xtrain, ytrain)
+    ntotal, d = size(X)
     # optimize loss fun
     loss(θ) = loss_fun(X, k, θ, traindata; if_deriv = false)[1] 
     loss_deriv(θ) = loss_fun(X, k, θ, traindata)[2] 
@@ -30,12 +29,12 @@ function spectral_clustering_main(X::Array{T, 2}, k::Int, traindata::TrainingDat
     end
     @info "Finish training, optimal θ" θ
     # Compute eigenvectors on Xtest using the optimal θ 
-    Vtest, _ = spectral_clustering_model(X, k, θ)
-    return Vtest, θ
+    V, _ = spectral_clustering_model(X, k, θ; if_deriv = false)
+    return V, θ
 end
 
 
-function spectral_clustering_model(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}; if_deriv::Bool = true)
+function spectral_clustering_model(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}; if_deriv::Bool = true) where T<:Float64
     # @info "enter spectral clustering model"
     n, d = size(X)
     dimθ = length(θ)
@@ -61,17 +60,18 @@ function spectral_clustering_model(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}
     return V, dV 
 end
 
-function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::TrainingData; if_deriv::Bool = true)
-    ntrain, d = size(Xtrain)
-    n = size(X, 1)
+function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::AbstractTrainingData; if_deriv::Bool = true) where T<:Float64
+    ntrain = traindata.n
+    Apm = traindata.Apm
+    n, d = size(X)
     dimθ = length(θ)
     @assert size(Apm) == (ntrain, ntrain)
     # compute clustering
     V, dV = spectral_clustering_model(X, k, θ)
     @assert size(V) == (n, k)
-    V_train = V[idtrain, :]
+    V_train = V[1:ntrain, :]
     if if_deriv 
-        dV_train = reshape(dV, n, k, dimθ)[idtrain, :, :]
+        dV_train = reshape(dV, n, k, dimθ)[1:ntrain, :, :]
         # derivative
         K1 = broadcast(-, reshape(V_train, ntrain, 1, k, 1), reshape(V_train, 1, ntrain, k, 1))
         K2 = broadcast(-, reshape(dV_train, ntrain, 1, k, dimθ), reshape(dV_train, 1, ntrain, k, dimθ))
@@ -91,7 +91,7 @@ function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::
     return loss, dloss
 end
 
-function comp_dV_L(V, Λ, L, dL, dimθ)
+function comp_dV_L(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}}, dL::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64) where T<:Float64
     n, k = size(V)
     dV = Array{Float64, 3}(undef, n, k, dimθ)
     for i in 1:k 

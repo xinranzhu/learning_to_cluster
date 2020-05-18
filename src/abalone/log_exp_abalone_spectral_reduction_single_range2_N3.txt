@@ -1,1 +1,10 @@
-./abalone_exp1.sh: 38: ./abalone_exp1.sh: $: not found
+ERROR: LoadError: LoadError: UndefVarError: T not defined
+Stacktrace:
+ [1] top-level scope at /home/xz584/projects/learning_to_cluster/src/spectral/spectral_clustering.jl:8
+ [2] include(::String) at ./client.jl:439
+ [3] top-level scope at /home/xz584/projects/learning_to_cluster/src/abalone/exp_script.jl:25
+ [4] include(::Module, ::String) at ./Base.jl:377
+ [5] exec_options(::Base.JLOptions) at ./client.jl:288
+ [6] _start() at ./client.jl:484
+in expression starting at /home/xz584/projects/learning_to_cluster/src/spectral/spectral_clustering.jl:8
+in expression starting at /home/xz584/projects/learning_to_cluster/src/abalone/exp_script.jl:25

@@ -1,0 +1,46 @@
+┌ Info: Size of whole dataset: 
+└   (size(data), size(label)) = ((4177, 7), (4177,))
+┌ Info: Size of testing data
+└   (size(X), size(y)) = ((4177, 7), (4177,))
+┌ Info: Size of training data
+└   (size(traindata.X), size(traindata.y), typeof(traindata)) = ((417, 7), (417,), trainingData)
+[ Info: Start training
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 382.0278146489801)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 618.0721853510198)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 236.1443707020397)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 145.98344394694044)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 261.9284903862076)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 256.10636933441157)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 266.72074063857394)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.68430376058456)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.63768723138094)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.6449092863574)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.6448495160022)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.6448890114278)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.6448805948304)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.6448929698451)
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.64488505301046)
+┌ Info: Finish training, optimal θ
+└   θ = 265.64488505301046
+┌ Info: size(L) and current θ 
+└   (size(L), θ) = ((4177, 4177), 265.64488505301046)
+┌ Info: Matching labels, ntrain:
+└   ntrain = 417
+Start spectral clustering
+Start K-means
+K-means converged with 74 iterations (objv = 8.427102300514848)
