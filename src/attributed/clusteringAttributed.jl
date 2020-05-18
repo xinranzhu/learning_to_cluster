@@ -122,8 +122,3 @@ function laplacian_attributed_L(params; if_deriv = true)
     return L, dL
 end
 
-
-
-
-
-
