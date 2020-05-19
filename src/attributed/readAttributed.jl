@@ -49,19 +49,23 @@ function unionDict()
     union_dict = Dict()
     all_keys = union(keys(from_to_dict), keys(to_from_dict))
     for key in all_keys
-        if to_from_dict[key] in keys(union_dict)
-            if !(to_from_dict[key] in union_dict[key])
-                union_dict[key] = hcat(union_dict[key], to_from_dict[key])
+        if key in keys(to_from_dict)
+            if to_from_dict[key] in keys(union_dict)
+                if !(to_from_dict[key] in union_dict[key])
+                    union_dict[key] = hcat(union_dict[key], to_from_dict[key])
+                end
+            else
+                push!(union_dict, key => to_from_dict[key])
             end
-        else
-            push!(union_dict, key => [to_from_dict[key]])
         end
-        if from_to_dict[key] in keys(union_dict)
-            if !(from_to_dict[key] in union_dict[key])
-                union_dict[key] = hcat(union_dict[key], from_to_dict[key])
+        if key in keys(from_to_dict)
+            if from_to_dict[key] in keys(union_dict)
+                if !(from_to_dict[key] in union_dict[key])
+                    union_dict[key] = hcat(union_dict[key], from_to_dict[key])
+                end
+            else
+                push!(union_dict, key => from_to_dict[key])
             end
-        else
-            push!(union_dict, key => [from_to_dict[key]])
         end
     end
     return union_dict
@@ -104,6 +108,9 @@ end
 #define dict structures/translation dictionaries
 num2str = getDict(body)
 str2num = Dict(value => key for (key, value) in num2str)
+
+adjDict = unionDict()
+
 
 #properties
 title_prop_array = prop_to_mat(title[6], n_title);

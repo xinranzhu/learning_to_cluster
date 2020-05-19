@@ -1,4 +1,4 @@
-include("readAttributed.jl")
+#include("readAttributed.jl")
 
 """
 Normalize the edge attributes of A (stored in P) to be in [0, 1]
