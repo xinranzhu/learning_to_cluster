@@ -112,3 +112,6 @@ src/spectral_attibuted/.ipynb_checkpoints/test_sparse-checkpoint.ipynb
 src/abalone/log_abalone_Vhat.txt
 src/test_reduction.ipynb
 src/.ipynb_checkpoints/test_reduction-checkpoint.ipynb
+
+src/abalone/saved_data
+src/spectral_attibuted/saved_data
