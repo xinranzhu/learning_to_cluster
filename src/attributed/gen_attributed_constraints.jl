@@ -65,9 +65,6 @@ function trainInfo(word_list)
 end
 
 
-
-
-
 function trainInfo_fixed()
     word_list = ["minecraft", "nosleep", "travel", "soccer", "atheism", "parenting", "science", "music", "news", "technology", "woahdude"]
     a = prune_list(word_list)
