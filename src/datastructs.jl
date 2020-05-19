@@ -35,6 +35,9 @@ struct atttraindata <: AttributedTrainingData
     y::Int # training labels
     Apm::Symmetric{Int64,Array{Int64,2}} # constraints matrix
     function atttraindata(n, y, Apm)
+        n = 100
+        y = ones(n)
+        Apm = Symmetric(zeros(n,n))
         return new(n, y, Apm)
     end
 end

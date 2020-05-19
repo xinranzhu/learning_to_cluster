@@ -84,7 +84,7 @@ m = size(Vhat_set.Vhat, 2)
 
 # 4. clustering 
 before = Dates.now()
-assignment, θ = spectral_reduction_main(n, k, rangeθ, θ, atttraindata, Vhat_set) where T<:Float64
+assignment, θ = spectral_reduction_main(n, k, rangeθ, θ, atttraindata, Vhat_set) 
 after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
 

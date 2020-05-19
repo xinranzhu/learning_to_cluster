@@ -3,6 +3,7 @@
 include("helpers.jl")
 include("../kernels/kernels.jl")
 include("comp_deriv.jl")
+include("../datastructs.jl")
 
 # using Optim
 using Distances
@@ -46,7 +47,7 @@ function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, 
             results = Optim.optimize(loss, rangeθ[1, 1], rangeθ[1, 2])
             θ = Optim.minimizer(results)
         else
-            θ_init = rand(Uniform(rangeθ[1, 1], rangeθ[1, 2]), dimθ, 1)
+            θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
             inner_optimizer = LBFGS()
             results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
             θ = Optim.minimizer(results)
@@ -57,6 +58,11 @@ function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, 
         @info "Trained θ, time cost " θ, elapsedmin
     end
 
+    if θ == nothing && atttraindata == nothing
+        θ = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
+        @warn "No training info or theta value provided, use random theta within range"
+    end
+    
     before = Dates.now()
     # compute H 
     L, dL = laplacian_L(X, θ; I_rows = I_rows, if_deriv = false) 
@@ -81,6 +87,11 @@ function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int =
     n, d = size(X)
     dimθ = size(rangeθ, 1)
     @assert size(rangeθ, 2) == 2 
+    # adjust N_sample if too large
+    while (n > 10000) && (k*N_sample > 10000)
+        @warn "To expensive to do svd Vhat_sample of ($n, $(k*N_sample))."
+        N_sample = Int(floor(N_sample*0.8))
+    end
     # use quasi-random samples
     s = SobolSeq(rangeθ[:,1], rangeθ[:,2])
     N = hcat([next!(s) for i = 1:N_sample]...)' # N_sample * d
@@ -103,7 +114,7 @@ function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int =
             break
         end
     end 
-    m = length(partialsum)
+    m = max(length(partialsum), k)
     Vhat =  F.U[:, 1:m] # n by m
 
     # select important rows from Vhat_sample
@@ -134,18 +145,20 @@ function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int =
     return Vhat, I_rows
 end
 
+# each valuation takes 22s and 50s if deriv.
 function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::AbstractTrainingData, Vhat::Array{T, 2}; 
                             I_rows::Union{Array{Int64,1}, Nothing} = nothing, if_deriv::Bool = true) where T<:Float64
-    @info "Evaluate loss func, current θ" θ
+    # @info "Evaluate loss func, current θ" θ
     dimθ = length(θ)
     n, m = size(Vhat)
     ntrain = traindata.n
     Apm = traindata.Apm
     # compute Y(θ)
-    L, dL = laplacian_L(X, θ; if_deriv = if_deriv) 
-    H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
+    L, dL = laplacian_L(X, θ; if_deriv = if_deriv) # 9s
+    # H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat) # 70s if m = 785
+    H = @views Vhat'[:, :] * L[:, :] * Vhat[:, :] # 20s using @views
     @assert size(H) == (m, m) 
-    ef = eigen(Symmetric(H), m-k+1:m)
+    ef = eigen(Symmetric(H), m-k+1:m) # 0.06s, m = 785
     Y = ef.vectors 
     Λ = ef.values
     # select training indices
@@ -158,7 +171,8 @@ function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, t
         # compute d(Y(θ))
         if dimθ == 1
             # dH = I_rows == nothing ? Vhat' * dL * Vhat : (Vhat[I_rows, :])' * (dL[I_rows, ] * Vhat)
-            dH = Vhat' * dL * Vhat
+            # dH = Vhat' * dL * Vhat
+            dH = @views Vhat'[:, :] * dL[:, :] * Vhat[:, :]
         else
             dH = Array{Float64, 3}(undef, m, m, dimθ)
             @tensor dH[i,j,k] = Vhat'[i, s] * dL[s, l, k] * Vhat[l, j] 
@@ -183,8 +197,6 @@ function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, t
     end
     return loss, dloss
 end
-
-
 
 
 function comp_dY(Y::Array{T, 2}, Λ::Array{T, 1}, H::Array{T, 2}, dH::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64) where T<:Float64

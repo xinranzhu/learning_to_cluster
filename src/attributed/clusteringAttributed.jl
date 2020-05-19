@@ -56,7 +56,7 @@ function loadmats()
     P = getBodyAttributeAdj()  #adjacency matrix of attributes (recall that graph is edge-attributed)
     Pn = normalizeAttributes(P)
     D =  dropdims(sum(A, dims = 2), dims=2) #Degree matrix
-    return (A, B, P, Pn, D)
+    return (A, B, P, Pn, D) #P and Pn not symmetric, but later when we peel off layers, we ensure they are symmetric
 end
 
 """
@@ -74,7 +74,7 @@ function getLayer(Pn, k)
             Layer[row, j] = Pn[row, j][k]
         end
     end
-    return Layer
+    return symmetric_sum(Layer) #returns symmetric matrix!
 end
 
 """
@@ -95,6 +95,22 @@ function sparseDot(a, b)
     return res
 end
 
+
+function sparseDiag(vec)
+    sparse(collect(1:size(vec, 1)), collect(1:size(vec, 1)), vec)
+end
+
+"""
+Input must be diagonal matrix, takes D^{-1/2}
+"""
+function invertsqrtDiag(spm)
+    B  = similar(spm)
+    for i = 1:size(spm, 1)
+        B[i, i] = 1/sqrt(spm[i, i])
+    end
+    return B
+end
+
 """
 For Reddit dataset, 
  - dL will be an n x n x 12 tensor
@@ -108,12 +124,30 @@ function laplacian_attributed(beta, alphas; if_deriv = true)
     Pn = normalizeAttributes(getBodyAttributeAdj())
     PLayers = [getLayer(Pn, i) for i =1:length(alphas)]
 
-    dbeta = sparseDot(alphas, PLayers)
-    dalphas = beta * [PLayers[i] for i = 1:length(alphas)]
+    dbeta = sparseDot(alphas, PLayers) 
+    dalphas = beta * [PLayers[i] for i = 1:length(alphas)] #dAs
 
-    L = A + beta * dbeta 
-    dL = if_deriv ? cat([dbeta], dalphas, dims = 1) : nothing
+    #L = A + beta * dbeta 
+    #dL = cat([dbeta], dalphas, dims = 1)
 
+    augmentedA = A + beta * dbeta 
+    daugmentedA = cat([dbeta], dalphas, dims = 1)
+    
+    augmentedD = sparseDiag(dropdims(sum(augmentedA, dims = 2), dims=2))
+    daugmentedD1 = sparseDiag(dropdims(sum(dbeta, dims = 2), dims=2))
+    daugmentedD2 = beta * [sparseDiag(dropdims(sum(PLayers[i], dims=2), dims=2)) for i =1:length(alphas)]
+    dD = cat([daugmentedD1], daugmentedD2, dims=1)
+
+    invsqrtD = invertsqrtDiag(augmentedD)
+
+    L = invsqrtD * augmentedA * invsqrtD
+    dL = []
+    for i = 1:(1+length(alphas))
+        push!(dL, invsqrtD * daugmentedA[i] * invsqrtD + 2 * dD[i] * (-0.5) * (invsqrtD ^ 3) * A * invsqrtD) #derivative of D^{-1/2}AD^{-1/2}
+    end 
+
+    # have computed A, D, dA, dD
+    # L = D^{-1/2}AD^{-1/2
     return L, dL
 end
 

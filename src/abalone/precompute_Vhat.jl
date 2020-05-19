@@ -67,8 +67,11 @@ N_sample_set = load("./saved_data/abalone_Nsample_set.jld")["data"]
 
 n_range = size(ranges, 1)
 n_N_sample = length(N_sample_set)
-for j in 1:n_N_sample
-    for i = 1:n_range
+
+
+for j in 2:n_N_sample
+    if j == 2
+        i = 6
         rangeθs = reshape(ranges[i, :], 1, 2)
         rangeθ = parsed_args["single"] ? rangeθs : repeat(rangeθs, d, 1)
         N_sample = N_sample_set[j]
@@ -82,5 +85,21 @@ for j in 1:n_N_sample
         Vhat_set = (Vhat = Vhat, rangeθ = rangeθ, I_rows = I_rows, N_sample = N_sample, timecost = elapsedmin)
         save("./saved_data/Vhat_set_$(parsed_args["single"])_$(i)_$(j).jld", "data", Vhat_set)
         @info "Finish computing Vhat size, time cost", size(Vhat), elapsedmin
+    else
+        for i = 1:n_range
+            rangeθs = reshape(ranges[i, :], 1, 2)
+            rangeθ = parsed_args["single"] ? rangeθs : repeat(rangeθs, d, 1)
+            N_sample = N_sample_set[j]
+            @info "Start computing Vhat, range, single or multi and N_sample", rangeθs, parsed_args["single"], N_sample
+            before = Dates.now()
+            Vhat, I_rows = comp_Vhat(X, k, rangeθ; N_sample = N_sample) 
+            after = Dates.now()
+            elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
+            m = size(Vhat, 2)
+            @assert m > k 
+            Vhat_set = (Vhat = Vhat, rangeθ = rangeθ, I_rows = I_rows, N_sample = N_sample, timecost = elapsedmin)
+            save("./saved_data/Vhat_set_$(parsed_args["single"])_$(i)_$(j).jld", "data", Vhat_set)
+            @info "Finish computing Vhat size, time cost", size(Vhat), elapsedmin
+        end
     end
 end

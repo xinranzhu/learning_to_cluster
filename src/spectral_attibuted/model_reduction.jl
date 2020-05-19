@@ -6,6 +6,9 @@
 using Distances
 using Dates
 using Arpack
+using LinearAlgebra
+
+include("../datastructs.jl")
 
 """
 k: number of clusters
@@ -14,9 +17,9 @@ X:
 Xtrain:
 ytrain: 
 """
-function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, nothing}， rangeθ::Array{T, 2}, 
-                                    atttraindata::Union{AttributeTrainingData, Nothing},
-                                 Vhat_set::NamedTuple) where T<:Float64
+function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, Nothing}, rangeθ::Array{T, 2}, 
+                                atttraindata::Union{AttributedTrainingData, Nothing},
+                                Vhat_set::NamedTuple) where T<:Float64
     # unpack Vhat 
     Vhat = Vhat_set.Vhat
     I_rows = Vhat_set.I_rows
@@ -57,7 +60,8 @@ function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, nothing}
     before = Dates.now()
     # compute H 
     L, _ = laplacian_attributed_L(θ; if_deriv = false)
-    H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
+    # PS: computing H takes 
+    H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat) 
     @assert size(H) == (m, m) 
 
     # compute Y, k largest eigenvectors of H
@@ -73,11 +77,16 @@ function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, nothing}
     return a, θ
 end
 
-function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false, m::Int = 500) where T<:Float64
+function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false) where T<:Float64
     # before = Dates.now()
     # n, d = size(X)
     dimθ = size(rangeθ, 1)
     @assert size(rangeθ, 2) == 2 
+    # adjust N_sample if too large
+    while (n > 10000) && (k*N_sample > 10000)
+        @warn "To expensive to do svd Vhat_sample of ($n, $(k*N_sample))."
+        N_sample = Int(floor(N_sample*0.8))
+    end
     # use quasi-random samples
     s = SobolSeq(rangeθ[:,1], rangeθ[:,2])
     N = hcat([next!(s) for i = 1:N_sample]...)' # N_sample * d
@@ -88,11 +97,21 @@ function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, pr
         _, Vk = eigs(L; nev=k)
         Vhat_sample[:, (i-1)*k+1: i*k] = Vk 
     end
-    # compute Vhat from truncated SVD 
-    F = svds(Vhat_sample; nsv=m)
-    Vhat = F.left_sv[:, 1:m]
-    I_rows = nothing
-    return Vhat, I_rows
+    # compute Vhat from truncated SVD from LinearAlgebra
+    F = svd(Vhat_sample)
+    S = F.S # singular value
+    totalsum = sum(S)
+    partialsum = [S[1]]
+    for i in 2:length(S)
+        partialsum = append!(partialsum, partialsum[i-1] + S[i])
+        if partialsum[i] > precision * totalsum
+            break
+        end
+    end 
+    m = max(length(partialsum), k)
+    Vhat =  F.U[:, 1:m] # n by m
+    @info "Finish computing Vhat , m = $m"
+    return Vhat, S[m+1]
 end
 
 function loss_fun_reduction(n::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, atttraindata::AttributedTrainingData, Vhat::Array{T, 2}; 
@@ -103,10 +122,10 @@ function loss_fun_reduction(n::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, a
     ntrain = traindata.n
     Apm = traindata.Apm
     # compute Y(θ)
-    L, dL = laplacian_attributed_L(θ; if_deriv = if_deriv)
-    H = I_rows == nothing ? Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat)
+    L, dL = laplacian_attributed_L(θ; if_deriv = if_deriv) # takes 5s
+    H = I_rows == nothing ? Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat) # takes 0.6s, m = 500
     @assert size(H) == (m, m) 
-    Λ, Y = eigs(L; nev=k)
+    Λ, Y = eigs(L; nev=k) # takes 3s, k = 40 
     # select training indices 
     Vhat_train_Y = (@view Vhat[1:ntrain, :]) * Y
     # compute loss

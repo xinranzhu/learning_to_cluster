@@ -47,7 +47,7 @@ s = ArgParseSettings()
     "--specparam"
         help = "silimarity parameter in spectral clustering, train if 0"
         arg_type = Float64
-        default = 0.1
+        default = 0.
     "--trainratio"
         help = "ratio of training set to testing set"
         arg_type = Float64
@@ -144,7 +144,7 @@ if parsed_args["reduction"]
             @assert Vhat_set.rangeθ == rangeθ 
             @info "Finish loading Vhat, rangeθ, N_sample, m, timecost" rangeθ[1, 1], rangeθ[1, 2], N_sample, Vhat_timecost
         end
-        θ_init = reshape(rand(Uniform(rangeθ[1, 1], rangeθ[1, 2]), dimθ, 1), dimθ)
+        θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
         θ_init = dimθ == 1 ? θ_init[1] : θ_init 
         assignment, θ = spectral_reduction_main(X, k, θ_init, rangeθ; traindata = traindata, Vhat_set = Vhat_set)
         algorithm = "Spectral clustering with model reduction (trained θ = $(θ))"

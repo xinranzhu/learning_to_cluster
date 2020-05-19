@@ -34,7 +34,17 @@ ind_shuffle = randperm(rng, size(data, 1))
 data = data[ind_shuffle, :];
 @info size(data)
 
-X = data[1:4177, :]; n, d = size(X)
+
+n = 4177
+testdata = testingData(data[1:n, :], label[1:n])
+X = testdata.X; y = testdata.y
+d = testdata.d; n = testdata.n 
+@info "Size of testing data" size(X), size(y)
+traindata = trainingData(X, y, 0.1)
+ntrain = traindata.n
+Apm = traindata.Apm
+@info "Size of training data" ntrain
+
 ntest = 10; h = 1e-5
 I_rows = nothing
 
@@ -44,10 +54,17 @@ N_sample = 500
 ranges = [500 3000]
 rangesm = repeat([500 3000], d, 1)
 
-Vhat, _ = comp_Vhat(X, k, ranges; N_sample = N_sample)
-@info "Size Vhat:" size(Vhat)
-Vhatm, _ = comp_Vhat(X, k, rangesm; N_sample = N_sample)
-@info "Size Vhatm:" size(Vhatm)
+# load Vhat
+Vhat_setm = JLD.load("../abalone/saved_data/Vhat_set_false_5_2.jld")["data"]
+Vhatm = Vhat_setm.Vhat
+Vhat_sets = JLD.load("../abalone/saved_data/Vhat_set_true_5_2.jld")["data"]
+Vhats = Vhat_sets.Vhat
+
+rangeθs = Vhat_sets.rangeθ
+rangeθm = Vhat_setm.rangeθ
+@assert d == size(rangeθm, 1)
+@info "Finish loading Vhat, m_single = $(size(Vhats, 2)), m_multi =  $(size(Vhatm, 2))"
+
 
 function comp_dY_full(X, θ, Vhat)
     dimθ = length(θ)
@@ -67,6 +84,7 @@ function comp_dY_full(X, θ, Vhat)
     return Y, dY
 end
 
+
 fun_Y(θ) = comp_dY_full(X, θ, Vhat)[1]
 deriv_Y(θ) =  comp_dY_full(X, θ, Vhat)[2]
 fun_Ym(θ) = comp_dY_full(X, θ, Vhatm)[1]
@@ -77,10 +95,14 @@ deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
 dYtest_fd = deriv_fd(fun_Y, h)
 θgrid = range(1, stop=2000, length=ntest)
 # θgrid = range(0.01, stop=2, length=ntest)
+before = Dates.now()
 # err1 = maximum(norm.(deriv_L.(θgrid) - dLtest_fd.(θgrid))) # O(h^2)
 err1 = norm(fun_Y.(θgrid .+ h) - fun_Y.(θgrid) - h .* deriv_Y.(θgrid)) # O(h^2)
 # err1 = norm(fun_L.(θgrid .+ h) - fun_L.(θgrid .- h) - 2 * h .* deriv_L.(θgrid)) # O(h^3)
-@info "dY, One-dim parameter: " err1
+after = Dates.now()
+elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=3) 
+@info "dY, one-dim parameter: $err1. Each evaluation took $(elapsedmin/ntest) min." 
+
 
 @info "Start multi-dim derivative test"
 m = size(Vhatm, 2)
@@ -89,6 +111,7 @@ m = size(Vhatm, 2)
 dYh = Array{Float64, 2}(undef, m, k)
 err2 = 0.
 hvec = h .* ones(d)
+before = Dates.now()
 for i in 1:ntest
     global err2
     θ = θgrid[:, i]
@@ -98,6 +121,7 @@ for i in 1:ntest
     @info err_current
     err2 = max(err2, err_current)
 end
-@info "dL, Multidimensional parameter: " err2
-
+after = Dates.now()
+elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=3) 
+@info "dY, multidimensional parameter: $err2. Each evaluation took $(elapsedmin/ntest) min." 
 

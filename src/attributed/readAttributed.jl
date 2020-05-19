@@ -15,6 +15,58 @@ const n_body = size(body, 1)
 #571927 total directed edges
 #43695 subreddits
 
+function _to_from_dict()
+    to_from_dict = Dict()
+    for i = 1:size(body, 1)
+        if body[i, 1] in keys(to_from_dict)
+            if !(body[i, 2] in  to_from_dict[body[i, 1]])
+                to_from_dict[body[i, 1]] = hcat(to_from_dict[body[i, 1]], body[i, 2])
+            end
+        else
+            push!(to_from_dict, body[i, 1] => [body[i, 2]])
+        end
+    end
+    return to_from_dict
+end
+
+function _from_to_Dict()
+    from_to_dict = Dict()
+    for i = 1:size(body, 1)
+        if body[i, 2] in keys(from_to_dict)
+            if !(body[i, 1] in  from_to_dict[body[i, 2]])
+                from_to_dict[body[i, 2]] = hcat(from_to_dict[body[i, 2]], body[i, 1])
+            end
+        else
+            push!(from_to_dict, body[i, 2] => [body[i, 1]])
+        end
+    end
+    return from_to_dict
+end
+
+function unionDict()
+    to_from_dict = _to_from_dict()
+    from_to_dict = _from_to_Dict()
+    union_dict = Dict()
+    all_keys = union(keys(from_to_dict), keys(to_from_dict))
+    for key in all_keys
+        if to_from_dict[key] in keys(union_dict)
+            if !(to_from_dict[key] in union_dict[key])
+                union_dict[key] = hcat(union_dict[key], to_from_dict[key])
+            end
+        else
+            push!(union_dict, key => [to_from_dict[key]])
+        end
+        if from_to_dict[key] in keys(union_dict)
+            if !(from_to_dict[key] in union_dict[key])
+                union_dict[key] = hcat(union_dict[key], from_to_dict[key])
+            end
+        else
+            push!(union_dict, key => [from_to_dict[key]])
+        end
+    end
+    return union_dict
+end
+
 """
 Get dictionary of subreddits, where keys are numbers and values are strings
 """
@@ -80,9 +132,37 @@ end
 Get weighted adjacency matrix for body data
 """
 function getBodyWeightedAdj()    
-    (from, to) = getBodyNumericalLabel()
+    (from, to) = getBodyNumericalLabel() #note that from, to pairs are directed.
     ss = sparse(from, to, ones(length(from))) #sparse adjacency matrix
+    #post-processing step guarantees ss is symmetric, as an adjacency matrix should be
+    ss = ss + ss' #diagonal is zero, so will remain zero, effect is that edges between nodes become undirected and counted the right number of times!
     return ss
+end
+
+
+
+"""
+returns symmetric sum ss + ss'
+"""
+function symmetric_sum(ss)
+    rows = rowvals(ss)
+    vals = nonzeros(ss)
+    m, n = size(ss)
+    #B  = spzeros(size(ss, 1), size(ss, 2)) #ss'
+    B = similar(ss)
+    for j = 1:n
+        for i in nzrange(ss, j)
+            row  = rows[i]
+            B[row, j] = typeof(ss[row, j]) <: Array{T} where T ? zeros(length(ss[row, j])) : 0.0 #assume entry is either array or float   
+        end
+    end
+    for j = 1:n
+        for i in nzrange(ss, j)
+            row  = rows[i]
+            B[j, row] = ss[row, j]
+        end
+    end
+    return B + ss
 end
 
 """
@@ -94,11 +174,10 @@ function getBodyAttributeAdj()
     for i = 1:size(body_prop_array, 1)
         x[i] = body_prop_array[i, :]
     end
-    ss = sparse(from, to, x) #sparse adjacency matrix
+    ss = sparse(from, to, x) #sparse directed adjacency matrix
     return ss
 end
-
-
+w =  getBodyAttributeAdj()
 #diagonal(ss) = (ss[i, i] for i = 1:size(ss, 1))
 #d =diagonal(ss)
 #cc = 0;
@@ -108,9 +187,6 @@ end
 #
 #println("number nonzero entries of body adj matrix: ", count(!iszero, ss))
 #println("number zero of body adj matrix: ", count(iszero, ss))
-
-
-
 
 
 function latexify_df(df_descr)
