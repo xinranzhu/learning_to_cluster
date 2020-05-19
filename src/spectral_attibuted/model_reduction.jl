@@ -7,6 +7,7 @@ using Distances
 using Dates
 using Arpack
 using LinearAlgebra
+using KrylovKit
 
 include("../datastructs.jl")
 
@@ -65,7 +66,9 @@ function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, Nothing}
     @assert size(H) == (m, m) 
 
     # compute Y, k largest eigenvectors of H
-    _, Y = eigs(Symmetric(H); nev=k)
+    ef = eigen(Symmetric(H), m-k+1:m)
+    Y = ef.vectors
+    @assert size(Y) == (m, k)
 
     after = Dates.now()
     elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
@@ -93,9 +96,9 @@ function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, pr
     Vhat_sample = Array{Float64, 2}(undef, n, k*N_sample)
     for i in 1:N_sample
         θ = N[i, :]
-        L, _ = laplacian_attributed_L(θ; if_deriv = false)
-        _, Vk = eigs(L; nev=k)
-        Vhat_sample[:, (i-1)*k+1: i*k] = Vk 
+        L, _ = laplacian_attributed_L(θ; if_deriv = false) # 43s
+        _, Vk = eigsolve(L, k, :LR, Float64; issymmetric=true, tol = 1e-16)
+        Vhat_sample[:, (i-1)*k+1: i*k] = hcat(Vk...)
     end
     # compute Vhat from truncated SVD from LinearAlgebra
     F = svd(Vhat_sample)
@@ -105,6 +108,7 @@ function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, pr
     for i in 2:length(S)
         partialsum = append!(partialsum, partialsum[i-1] + S[i])
         if partialsum[i] > precision * totalsum
+            @info "$i, partial sum = $(partialsum[i]),  total sum = $totalsum"
             break
         end
     end 
@@ -122,10 +126,14 @@ function loss_fun_reduction(n::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, a
     ntrain = traindata.n
     Apm = traindata.Apm
     # compute Y(θ)
-    L, dL = laplacian_attributed_L(θ; if_deriv = if_deriv) # takes 5s
+    L, dL = laplacian_attributed_L(θ; if_deriv = if_deriv) # takes 45s
     H = I_rows == nothing ? Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat) # takes 0.6s, m = 500
     @assert size(H) == (m, m) 
-    Λ, Y = eigs(L; nev=k) # takes 3s, k = 40 
+    ef = eigen(Symmetric(H), m-k+1:m)
+    Y = ef.vectors
+    Λ = ef.values
+    @assert size(Y) == (m, k)
+    @assert length(Λ) == k
     # select training indices 
     Vhat_train_Y = (@view Vhat[1:ntrain, :]) * Y
     # compute loss

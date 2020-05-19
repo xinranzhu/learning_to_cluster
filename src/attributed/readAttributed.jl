@@ -3,8 +3,8 @@ using CSV
 using Latexify
 using SparseArrays
 
-title = CSV.read("../../data/soc-redditHyperlinks-title.tsv")
-body = CSV.read("../../data/soc-redditHyperlinks-body.tsv")
+title = CSV.read("../datasets/soc-redditHyperlinks-title.tsv")
+body = CSV.read("../datasets/soc-redditHyperlinks-body.tsv")
 
 #pre-processing
 subreddits_from = Set(body[1])
