@@ -141,11 +141,14 @@ function laplacian_attributed(beta, alphas; if_deriv = true)
     invsqrtD = invertsqrtDiag(augmentedD)
 
     L = invsqrtD * augmentedA * invsqrtD
-    dL = []
-    for i = 1:(1+length(alphas))
-        push!(dL, invsqrtD * daugmentedA[i] * invsqrtD + 2 * dD[i] * (-0.5) * (invsqrtD ^ 3) * A * invsqrtD) #derivative of D^{-1/2}AD^{-1/2}
-    end 
-
+    if if_deriv
+        dL = []
+        for i = 1:(1+length(alphas))
+            push!(dL, invsqrtD * daugmentedA[i] * invsqrtD + 2 * dD[i] * (-0.5) * (invsqrtD ^ 3) * A * invsqrtD) #derivative of D^{-1/2}AD^{-1/2}
+        end 
+    else
+        dL = nothing
+    end
     # have computed A, D, dA, dD
     # L = D^{-1/2}AD^{-1/2
     return L, dL
