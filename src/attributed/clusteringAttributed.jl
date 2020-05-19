@@ -125,24 +125,21 @@ function laplacian_attributed(beta, alphas; if_deriv = true)
     PLayers = [getLayer(Pn, i) for i =1:length(alphas)]
 
     dbeta = sparseDot(alphas, PLayers) 
-    dalphas = beta * [PLayers[i] for i = 1:length(alphas)] #dAs
 
     #L = A + beta * dbeta 
     #dL = cat([dbeta], dalphas, dims = 1)
 
     augmentedA = A + beta * dbeta 
-    daugmentedA = cat([dbeta], dalphas, dims = 1)
-    
     augmentedD = sparseDiag(dropdims(sum(augmentedA, dims = 2), dims=2))
-    daugmentedD1 = sparseDiag(dropdims(sum(dbeta, dims = 2), dims=2))
-    daugmentedD2 = beta * [sparseDiag(dropdims(sum(PLayers[i], dims=2), dims=2)) for i =1:length(alphas)]
-    dD = cat([daugmentedD1], daugmentedD2, dims=1)
-
     invsqrtD = invertsqrtDiag(augmentedD)
-
-    L = invsqrtD * augmentedA * invsqrtD
+    L = invsqrtD * augmentedA * invsqrtD    
     if if_deriv
         dL = []
+        dalphas = beta * [PLayers[i] for i = 1:length(alphas)] #dAs
+        daugmentedA = cat([dbeta], dalphas, dims = 1)
+        daugmentedD1 = sparseDiag(dropdims(sum(dbeta, dims = 2), dims=2))
+        daugmentedD2 = beta * [sparseDiag(dropdims(sum(PLayers[i], dims=2), dims=2)) for i =1:length(alphas)]
+        dD = cat([daugmentedD1], daugmentedD2, dims=1)
         for i = 1:(1+length(alphas))
             push!(dL, invsqrtD * daugmentedA[i] * invsqrtD + 2 * dD[i] * (-0.5) * (invsqrtD ^ 3) * A * invsqrtD) #derivative of D^{-1/2}AD^{-1/2}
         end 

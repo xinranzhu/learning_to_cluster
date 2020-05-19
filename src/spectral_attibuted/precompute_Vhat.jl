@@ -25,6 +25,8 @@ const n = 35776
 ranges = load("./saved_data/reddit_range_set.jld")["data"]
 N_sample_set = load("./saved_data/reddit_Nsample_set.jld")["data"]
 k_set = load("./saved_data/reddit_k_set.jld")["data"]
+@info ranges
+@info N_sample_set
 
 n_range = size(ranges, 1)
 n_N_sample = length(N_sample_set)
@@ -37,7 +39,7 @@ for j in 1:n_N_sample
         for i in 1:n_range
             rangeθ = ranges[i, :, :]
             @assert size(rangeθ) == (dimθ, 2)
-            @info "Start computing Vhat, range $i and N_sample = $N_sample"
+            @info "Start computing Vhat, range $i and N_sample = $N_sample, k = $k"
             before = Dates.now()
             Vhat, s = comp_Vhat(n, k, rangeθ; N_sample = N_sample) 
             after = Dates.now()
