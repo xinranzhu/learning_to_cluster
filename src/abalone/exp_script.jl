@@ -24,7 +24,6 @@ include("../TSNE/myTSNE.jl")
 include("../kmeans_match_labels.jl")
 include("../spectral/spectral_clustering.jl")
 include("../spectral/spectral_reduction_main.jl")
-include("../spectral/helpers.jl")
 include("../datastructs.jl")
 
 s = ArgParseSettings()

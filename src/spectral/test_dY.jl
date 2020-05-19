@@ -13,6 +13,7 @@ using Sobol
 using DataFrames
 using CSV
 using TensorOperations
+using JLD
 
 # include("comp_deriv.jl")
 # include("../kernels/kernels.jl")
@@ -25,13 +26,15 @@ include("spectral_reduction_main.jl")
 
 # abalone
 df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
-data = convert(Matrix, df[:,2:8]) 
+data = convert(Matrix, df[:,2:8])
+label = convert(Array, df[:, 9]) # 1 ~ 29
 k = 29
 
 # shuffle data: n * d
 randseed = 1234; rng = MersenneTwister(randseed)
 ind_shuffle = randperm(rng, size(data, 1))
-data = data[ind_shuffle, :];
+data = data[ind_shuffle, :]
+label = label[ind_shuffle]
 @info size(data)
 
 
@@ -47,12 +50,6 @@ Apm = traindata.Apm
 
 ntest = 10; h = 1e-5
 I_rows = nothing
-
-# compute Vhat and Vhatm
-@info "Computing Vhat"
-N_sample = 500
-ranges = [500 3000]
-rangesm = repeat([500 3000], d, 1)
 
 # load Vhat
 Vhat_setm = JLD.load("../abalone/saved_data/Vhat_set_false_5_2.jld")["data"]
@@ -70,7 +67,7 @@ function comp_dY_full(X, θ, Vhat)
     dimθ = length(θ)
     L, dL = laplacian_L(X, θ)
     m = size(Vhat, 2)
-    H = Vhat' * L * Vhat 
+    H = @views Vhat' * L * Vhat 
     ef = eigen(Symmetric(H), m-k+1:m)
     Y = ef.vectors
     Λ = ef.values
@@ -85,15 +82,15 @@ function comp_dY_full(X, θ, Vhat)
 end
 
 
-fun_Y(θ) = comp_dY_full(X, θ, Vhat)[1]
-deriv_Y(θ) =  comp_dY_full(X, θ, Vhat)[2]
+fun_Y(θ) = comp_dY_full(X, θ, Vhats)[1]
+deriv_Y(θ) =  comp_dY_full(X, θ, Vhats)[2]
 fun_Ym(θ) = comp_dY_full(X, θ, Vhatm)[1]
 deriv_Ym(θ) =  comp_dY_full(X, θ, Vhatm)[2]
 
 @info "Start 1d derivative test"
 deriv_fd(f, h) = x -> (f(x+h)-f(x-h))/2/h
 dYtest_fd = deriv_fd(fun_Y, h)
-θgrid = range(1, stop=2000, length=ntest)
+θgrid = range(rangeθs[1], stop=rangeθs[2], length=ntest)
 # θgrid = range(0.01, stop=2, length=ntest)
 before = Dates.now()
 # err1 = maximum(norm.(deriv_L.(θgrid) - dLtest_fd.(θgrid))) # O(h^2)
@@ -101,12 +98,12 @@ err1 = norm(fun_Y.(θgrid .+ h) - fun_Y.(θgrid) - h .* deriv_Y.(θgrid)) # O(h^
 # err1 = norm(fun_L.(θgrid .+ h) - fun_L.(θgrid .- h) - 2 * h .* deriv_L.(θgrid)) # O(h^3)
 after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=3) 
-@info "dY, one-dim parameter: $err1. Each evaluation took $(elapsedmin/ntest) min." 
+@info "dY, one-dim parameter: $err1. Each evaluation took $(round(elapsedmin/ntest, digits=5)) min." 
 
 
 @info "Start multi-dim derivative test"
 m = size(Vhatm, 2)
-θgrid = rand(Uniform(1, 2000), d, ntest)
+θgrid = rand(Uniform(rangeθs[1], rangeθs[2]), d, ntest)
 # θgrid = rand(Uniform(0.01,2), d, ntest)
 dYh = Array{Float64, 2}(undef, m, k)
 err2 = 0.
@@ -123,5 +120,28 @@ for i in 1:ntest
 end
 after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=3) 
-@info "dY, multidimensional parameter: $err2. Each evaluation took $(elapsedmin/ntest) min." 
+@info "dY, multidimensional parameter: $err2. Each evaluation took $(round(elapsedmin/ntest, digits=5)) min." 
 
+
+# log
+# julia test_dY.jl
+# [ Info: (4177, 7)
+# ┌ Info: Size of testing data
+# └   (size(X), size(y)) = ((4177, 7), (4177,))
+# ┌ Info: Size of training data
+# └   ntrain = 417
+# [ Info: Finish loading Vhat, m_single = 142, m_multi =  785
+# [ Info: Start 1d derivative test
+# [ Info: dY, one-dim parameter: 1.345496393027407e-7. Each evaluation took 0.962 min.
+# [ Info: Start multi-dim derivative test
+# [ Info: 4.614548970168324e-11
+# [ Info: 1.8569207793155315e-11
+# [ Info: 3.625247064623181e-11
+# [ Info: 2.9040876370376112e-11
+# [ Info: 3.1572482589790025e-11
+# [ Info: 1.0579429267065698e-11
+# [ Info: 5.6205517590192374e-11
+# [ Info: 2.462204576917873e-11
+# [ Info: 1.1767985271091683e-10
+# [ Info: 1.9230913002572265e-11
+# [ Info: dY, multidimensional parameter: 1.1767985271091683e-10. Each evaluation took 4.6432 min.

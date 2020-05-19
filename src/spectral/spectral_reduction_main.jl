@@ -1,6 +1,5 @@
 # train an optimal θ
 # Xtrain is a small portion of X, with known label ytrain
-include("helpers.jl")
 include("../kernels/kernels.jl")
 include("comp_deriv.jl")
 include("../datastructs.jl")
@@ -146,9 +145,9 @@ function comp_Vhat(X::Array{T, 2}, k::Int, rangeθ::Array{T, 2}; N_sample::Int =
 end
 
 # each valuation takes 22s and 50s if deriv.
-function loss_fun_reduction(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::AbstractTrainingData, Vhat::Array{T, 2}; 
+function loss_fun_reduction(X::Array{T, 2}, k::Int64, θ, traindata::AbstractTrainingData, Vhat::Array{T, 2}; 
                             I_rows::Union{Array{Int64,1}, Nothing} = nothing, if_deriv::Bool = true) where T<:Float64
-    # @info "Evaluate loss func, current θ" θ
+    @info "Evaluate loss func, current θ" θ
     dimθ = length(θ)
     n, m = size(Vhat)
     ntrain = traindata.n

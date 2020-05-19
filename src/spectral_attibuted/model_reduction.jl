@@ -18,25 +18,22 @@ X:
 Xtrain:
 ytrain: 
 """
-function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, Nothing}, rangeθ::Array{T, 2}, 
-                                atttraindata::Union{AttributedTrainingData, Nothing},
+function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
+                                traindata::Union{AttributedTrainingData, Nothing},
                                 Vhat_set::NamedTuple) where T<:Float64
     # unpack Vhat 
     Vhat = Vhat_set.Vhat
-    I_rows = Vhat_set.I_rows
+    k = Vhat_set.k
+    rangeθ = Vhat_set.rangeθ
+    dimθ = size(rangeθ, 1)
     m = size(Vhat, 2)
     @assert m > k 
-    @assert Vhat_set.rangeθ == rangeθ # make sure Vhat is from same setting
-
-    dimθ = size(rangeθ, 1)
-
-    # l_rows = I_rows == nothing ? n : length(I_rows)
     # train an optimal θ value if have training set
-    if atttraindata != nothing 
+    if traindata != nothing 
         before = Dates.now()
         @info "Start training θ"
-        loss(θ) = loss_fun_reduction(n, k, θ, atttraindata, Vhat; if_deriv = false)[1] 
-        loss_deriv(θ) = loss_fun_reduction(n, k, θ, atttraindata, Vhat)[2] 
+        loss(θ) = loss_fun_reduction(n, k, θ, traindata, Vhat; if_deriv = false)[1] 
+        loss_deriv(θ) = loss_fun_reduction(n, k, θ, traindata, Vhat)[2] 
         function loss_deriv!(G, θ)
             G = loss_deriv(θ)
         end
@@ -53,7 +50,7 @@ function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, Nothing}
     end
 
     # check if θ is provided or trained
-    if θ == nothing && atttraindata == nothing
+    if θ == nothing && traindata == nothing
         θ = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
         @warn "No training info or theta value provided, use random theta within range"
     end
@@ -62,7 +59,7 @@ function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, Nothing}
     # compute H 
     L, _ = laplacian_attributed_L(θ; if_deriv = false)
     # PS: computing H takes 
-    H = I_rows == nothing ?  Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat) 
+    H = Vhat' * L * Vhat 
     @assert size(H) == (m, m) 
 
     # compute Y, k largest eigenvectors of H
@@ -80,7 +77,7 @@ function spectral_reduction_main(n::Int, k::Int, θ::Union{Array{T, 1}, Nothing}
     return a, θ
 end
 
-function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false) where T<:Float64
+function comp_Vhat(n::Int64, k::Int64, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false) where T<:Float64
     # before = Dates.now()
     # n, d = size(X)
     dimθ = size(rangeθ, 1)
@@ -118,16 +115,17 @@ function comp_Vhat(n::Int, k::Int, rangeθ::Array{T, 2}; N_sample::Int = 100, pr
     return Vhat, S[m+1]
 end
 
-function loss_fun_reduction(n::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, atttraindata::AttributedTrainingData, Vhat::Array{T, 2}; 
-                            I_rows::Union{Array{Int64,1}, Nothing} = nothing, if_deriv::Bool = true) where T<:Float64
+function loss_fun_reduction(n::Int64, k::Int64, θ::Union{Array{T, 1}, T}, traindata::AttributedTrainingData, Vhat::Array{T, 2}; 
+                            if_deriv::Bool = true) where T<:Float64
     @info "Evaluate loss func, current θ" θ
     dimθ = length(θ)
     n, m = size(Vhat)
     ntrain = traindata.n
+    idtrain = traindata.id
     Apm = traindata.Apm
     # compute Y(θ)
     L, dL = laplacian_attributed_L(θ; if_deriv = if_deriv) # takes 45s
-    H = I_rows == nothing ? Vhat' * L * Vhat : (Vhat[I_rows, :])' * (L[I_rows, ] * Vhat) # takes 0.6s, m = 500
+    H = Vhat' * L * Vhat # takes 0.6s, m = 500
     @assert size(H) == (m, m) 
     ef = eigen(Symmetric(H), m-k+1:m)
     Y = ef.vectors
@@ -135,7 +133,7 @@ function loss_fun_reduction(n::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, a
     @assert size(Y) == (m, k)
     @assert length(Λ) == k
     # select training indices 
-    Vhat_train_Y = (@view Vhat[1:ntrain, :]) * Y
+    Vhat_train_Y = (@view Vhat[idtrain, :]) * Y
     # compute loss
     K = Array{Float64, 2}(undef, ntrain, ntrain)
     K = pairwise!(K, SqEuclidean(), Vhat_train_Y, dims=1)
@@ -150,7 +148,7 @@ function loss_fun_reduction(n::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, a
         # compute dloss
         dloss = Array{Float64, 1}(undef, dimθ)
         for i in 1:dimθ
-            Vhat_train_dY = @views Vhat[1:ntrain, :] * dY[:, :, i]
+            Vhat_train_dY = @views Vhat[idtrain, :] * dY[:, :, i]
             K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
             dloss[i] = dot(Apm, K)
         end

@@ -17,7 +17,6 @@ using Arpack
 using JLD
 
 include("comp_deriv.jl")
-include("helpers.jl")
 include("../datastructs.jl")
 include("../kernels/kernels.jl")
 include("spectral_reduction_main.jl")

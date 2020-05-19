@@ -15,7 +15,7 @@ using TensorOperations
 using JLD
 using LinearAlgebra
 
-include("../attributed/clusteringAttributed.jl")
+include("../attributed/attributed.jl")
 include("../datastructs.jl")
 include("./model_reduction.jl")
 
@@ -32,24 +32,30 @@ n_range = size(ranges, 1)
 n_N_sample = length(N_sample_set)
 n_k = length(k_set)
 @info n_range, n_N_sample, n_k
-for j in 1:n_N_sample
+failedID = []
+for j in 2:n_N_sample
     N_sample = N_sample_set[j]
-    for s in 1:n_k
-        k = k_set[s]
+    for l in 1:n_k
+        k = k_set[l]
         for i in 1:n_range
-            rangeθ = ranges[i, :, :]
-            @assert size(rangeθ) == (dimθ, 2)
-            @info "Start computing Vhat, range $i and N_sample = $N_sample, k = $k"
-            before = Dates.now()
-            Vhat, s = comp_Vhat(n, k, rangeθ; N_sample = N_sample) 
-            after = Dates.now()
-            elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
-            m = size(Vhat, 2)
-            @info "k = $k, N = $N_sample, m = $m and s = $s"
-            @assert m > k
-            Vhat_set = (Vhat = Vhat, rangeθ = rangeθ, N_sample = N_sample, timecost = elapsedmin, k = k)
-            save("./saved_data/Vhat_set_$(i)_$(j)_$(s).jld", "data", Vhat_set)
-            @info "Finish computing Vhat size, time cost", size(Vhat), elapsedmin
+            try
+                rangeθ = ranges[i, :, :]
+                @assert size(rangeθ) == (dimθ, 2)
+                @info "Start computing Vhat, range $i and N_sample = $N_sample, k = $k"
+                before = Dates.now()
+                Vhat, s = comp_Vhat(n, k, rangeθ; N_sample = N_sample) 
+                after = Dates.now()
+                elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
+                m = size(Vhat, 2)
+                @info "k = $k, N = $N_sample, m = $m and s = $s"
+                @assert m > k
+                Vhat_set = (Vhat = Vhat, rangeθ = rangeθ, N_sample = N_sample, timecost = elapsedmin, k = k)
+                save("./saved_data/Vhat_set_$(i)_$(j)_$(l).jld", "data", Vhat_set)
+                @info "Finish computing Vhat size, time cost", size(Vhat), elapsedmin
+            catch err
+                append!(failedID, [i, j, l])
+                @info "Faied ID " [i, j, l]
+            end
         end
     end
 end

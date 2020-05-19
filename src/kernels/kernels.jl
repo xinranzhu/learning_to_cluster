@@ -65,8 +65,10 @@ dims: 1 if data points are arranged row-wise and 2 if col-wise
 function correlation(k::AbstractCorrelation, θ, x; jitter = 0, dims=1) 
     ret = Array{Float64}(undef, size(x, dims), size(x, dims))
     correlation!(ret, k, θ, x, jitter = jitter)
+    # mycorrelation!(ret, k, θ, x, jitter = jitter)
     return ret
 end
+
 
 function cross_correlation(k::AbstractCorrelation, θ, x, y; dims=1)
     ret = Array{Float64}(undef, size(x, dims), size(y, dims))
@@ -84,12 +86,31 @@ end
 
 function correlation!(out, k::AbstractCorrelation, θ, x; jitter = 0, dims=1)
     x = reshape(x, size(x, 1), size(x, 2))
+    # @info "Current θ and type " θ, typeof(θ)
     dist = distance(k, θ)
     pairwise!(out, dist, x, dims=dims)
     out .= (τ -> k(τ, θ)).(out) 
     if jitter != 0
         out[diagind(out)] .+= jitter 
         # out ./= out[1, 1] #covariance must be in [0, 1]
+    end
+    return nothing
+end
+
+
+
+function mycorrelation!(out, k::AbstractCorrelation, θ, x; jitter = 0, dims=1)
+    x = reshape(x, size(x, 1), size(x, 2))
+    n, d = size(x)
+    @info "Current θ and type " θ, typeof(θ)
+    Wsq(x, y, θ) = sum((x - y).^2 .* θ)
+    wq_fixed(x, y) =  exp(- Wsq(x, y, θ) / 2)
+    for j = 1:n
+        bj = view(x, j, :)
+        for i = 1:n
+            ai = view(x, i, :)
+            out[i, j] = wq_fixed(ai, bj)
+        end
     end
     return nothing
 end
@@ -116,9 +137,12 @@ const SqExponential = RBF
 #These are not standalone functions!
 (::Gaussian)(τ::Real, θ::Real) = exp(- τ * θ / 2) 
 (::Gaussian)(τ::Real, ::AbstractVector) = exp(- τ / 2) #theta already taken into account in computation of tau
+(::Gaussian)(τ::Real, ::Any) = exp(- τ / 2) #theta already taken into account in computation of tau
 
 distance(::Gaussian, θ::Real) = SqEuclidean()
+# distance(::Gaussian, θ::AbstractVector) = WeightedSqEuclidean(θ)
 distance(::Gaussian, θ::AbstractVector) = WeightedSqEuclidean(θ)
+distance(::Gaussian, θ) = WeightedSqEuclidean(θ)
 
 """
 currently derivative is only implemented for single length scale

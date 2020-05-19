@@ -1,5 +1,4 @@
 # using Optim
-include("helpers.jl")
 include("../kernels/kernels.jl")
 include("comp_deriv.jl")
 include("../datastructs.jl")

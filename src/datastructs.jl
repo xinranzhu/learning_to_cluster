@@ -1,4 +1,3 @@
-include("./spectral/helpers.jl")
 abstract type AbstractTrainingData end
 abstract type AbstractTestingData end
 abstract type AttributedTrainingData end
@@ -14,7 +13,7 @@ struct trainingData <: AbstractTrainingData
         Xtrain = X[1:ntrain, :]
         ytrain = y[1:ntrain]
         idtrain = 1:ntrain
-        Apm = gen_constraints(Xtrain, ytrain)  #constraint matrix
+        Apm = gen_constraints(ntrain, ytrain)  #constraint matrix
         return new(Xtrain, ytrain, ntrain, size(Xtrain, 2), Apm)
     end
 end
@@ -32,12 +31,28 @@ end
 
 struct atttraindata <: AttributedTrainingData
     n::Int # number of training data
-    y::Int # training labels
+    id::Array{Int64, 1}
+    y::Array{Int64, 1} # training labels
     Apm::Symmetric{Int64,Array{Int64,2}} # constraints matrix
-    function atttraindata(n, y, Apm)
-        n = 100
-        y = ones(n)
-        Apm = Symmetric(zeros(n,n))
-        return new(n, y, Apm)
+    function atttraindata(n::Int64, id::Array{Int64, 1}, y::Array{Int64, 1})
+        Apm = gen_constraints(n, y)
+        return new(n, id, y, Apm)
     end
+end
+
+function gen_constraints(n::Int64, y::Array{Int64, 1})
+    Apm = Array{Float64, 2}(undef, n, n)
+    R = CartesianIndices(Apm)
+    for I in R 
+        i, j = Tuple(I)
+        if i == j
+            constraint = 0
+        elseif y[i] == y[j]
+            constraint = 1
+        else
+            constraint = -1
+        end
+        Apm[I] = constraint
+    end
+    return Symmetric(Apm)
 end

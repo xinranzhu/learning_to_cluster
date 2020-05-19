@@ -61,7 +61,6 @@ function trainInfo(word_list)
     for i = 1:length(k)
         indices[i] = str2num[k[i]]     
     end
-    return indices, y
 end
 
 
@@ -75,10 +74,13 @@ function trainInfo_fixed()
     n = length(k)
     #y = zeros(1, length(k))
     y = sum([create_row(sums[i], n) for i = 1:length(a)], dims=1)
-    indices = zeros(1, length(k))
+    indices = zeros(length(k))
     for i = 1:length(k)
         indices[i] = str2num[k[i]]     
     end
+    indices = convert(Array{Int64,1}, indices)
+    # indices = dropdims(indices; dims=1)
+    y = convert(Array{Int64,1}, y[1])
     return indices, y
 end
 

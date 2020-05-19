@@ -23,6 +23,7 @@ rangeθ = reshape(range_set[1, :, :], dimθ, 2)
 save("./saved_data/reddit_theta_set.jld", "data", θ_set)
 
 # save some k values (number of clusters)
-k_set = [12, 15, 18, 20, 25, 30, 35, 40]
+# k_set = [12, 15, 18, 20, 25, 30, 35, 40]
+k_set = [12, 15, 18, 20, 25, 30]
 save("./saved_data/reddit_k_set.jld", "data", k_set)
 
