@@ -304,3 +304,63 @@ Algorithm: Spectral clustering with model reduction (trained θ = 25.27215783717
     Rand index (agreement probability):          0.83983
     Mirkin's index (disagreement probability):   0.16017
     Hubert's index P(agree) - P(disagree):       0.67967 
+
+2020-05-20T00:42:54.355, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 400
+rangeθ: [1.0 200.0], dimθ: 1; N_sample: 1000; m: 132 ; Vhat_timecost = 62.07342 
+Must-link constraints weight: 10 
+Algorithm: Spectral clustering with model reduction (trained θ = 25.290711426476747) 
+    Time cost:                                   64.10169
+    Accuracy (ACC):                              0.18949
+    Adjusted Rand index:                         0.05692
+    Rand index (agreement probability):          0.84966
+    Mirkin's index (disagreement probability):   0.15034
+    Hubert's index P(agree) - P(disagree):       0.69932 
+
+2020-05-20T00:46:26.65, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 400
+rangeθ: [1.0 200.0], dimθ: 1; N_sample: 1500; m: 134 ; Vhat_timecost = 127.53282 
+Must-link constraints weight: 10 
+Algorithm: Spectral clustering with model reduction (trained θ = 25.293302539676073) 
+    Time cost:                                   129.44047
+    Accuracy (ACC):                              0.18130
+    Adjusted Rand index:                         0.06000
+    Rand index (agreement probability):          0.84979
+    Mirkin's index (disagreement probability):   0.15021
+    Hubert's index P(agree) - P(disagree):       0.69957 
+
+2020-05-20T00:49:58.999, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 400
+rangeθ: [1.0 1000.0], dimθ: 1; N_sample: 100; m: 128 ; Vhat_timecost = 13.71627 
+Must-link constraints weight: 10 
+Algorithm: Spectral clustering with model reduction (trained θ = 296.686449948252) 
+    Time cost:                                   15.61120
+    Accuracy (ACC):                              0.20680
+    Adjusted Rand index:                         0.05525
+    Rand index (agreement probability):          0.82338
+    Mirkin's index (disagreement probability):   0.17662
+    Hubert's index P(agree) - P(disagree):       0.64677 
+
+2020-05-20T00:53:54.362, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 400
+rangeθ: [1.0 1000.0], dimθ: 1; N_sample: 500; m: 142 ; Vhat_timecost = 40.09772 
+Must-link constraints weight: 10 
+Algorithm: Spectral clustering with model reduction (trained θ = 296.7841131943508) 
+    Time cost:                                   42.22790
+    Accuracy (ACC):                              0.16903
+    Adjusted Rand index:                         0.04462
+    Rand index (agreement probability):          0.84295
+    Mirkin's index (disagreement probability):   0.15705
+    Hubert's index P(agree) - P(disagree):       0.68591 
+
+2020-05-20T00:57:36.919, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 400
+rangeθ: [1.0 1000.0], dimθ: 1; N_sample: 1000; m: 147 ; Vhat_timecost = 118.87578 
+Must-link constraints weight: 10 
+Algorithm: Spectral clustering with model reduction (trained θ = 296.7827695098333) 
+    Time cost:                                   120.86736
+    Accuracy (ACC):                              0.17029
+    Adjusted Rand index:                         0.04575
+    Rand index (agreement probability):          0.84854
+    Mirkin's index (disagreement probability):   0.15146
+    Hubert's index P(agree) - P(disagree):       0.69708 

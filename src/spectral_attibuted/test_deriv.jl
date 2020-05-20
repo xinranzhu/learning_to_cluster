@@ -160,3 +160,6 @@ elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
 # [ Info: 9 test: current error = 6.487791687746845e-6
 # [ Info: 10 test: current error = 7.562903872085179e-6
 # [ Info: Test derivative of Y: error = 8.683180546303226e-6. Each evaluation took 2.309303 min.
+
+#TEST dloss
+# [ Info: Test derivative of l: error = 0.22003529363259464. Each evaluation took 2.238413 min.
