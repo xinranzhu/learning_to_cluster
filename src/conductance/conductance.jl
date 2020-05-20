@@ -29,9 +29,9 @@ function conductance(A, y::Array{T, 1} where T<:Int64)
     end
     return sum(conductances)/k
 end
-A = sprand(10, 10, .5)
-println(conductance(A, vcat(ones(Int64, 5), 2*ones(Int64, 5))))
-B = ones(5, 5)
-C = zeros(5, 5)
-D = [B C; C B]
-println(conductance(D, vcat(ones(Int64, 5), 2*ones(Int64, 5))))
+# A = sprand(10, 10, .5)
+# println(conductance(A, vcat(ones(Int64, 5), 2*ones(Int64, 5))))
+# B = ones(5, 5)
+# C = zeros(5, 5)
+# D = [B C; C B]
+# println(conductance(D, vcat(ones(Int64, 5), 2*ones(Int64, 5))))

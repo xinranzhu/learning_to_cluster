@@ -62,11 +62,11 @@ s = ArgParseSettings()
         help = "use single θ or multi-dim"
         action = :store_true
     "--set_Nsample"
-        help = "use which settings of N_sample -- see precompute_Vhat"
+        help = "use which settings of N_sample -- 1, 2, 3"
         arg_type = Int
         default = 0
     "--set_range"
-        help = "use which settings of rangeθ -- see precompute_Vhat"
+        help = "use which settings of rangeθ -- 4, 5, 7 is preferred"
         arg_type = Int
         default = 0
     "--rangetheta"
@@ -158,7 +158,11 @@ if parsed_args["reduction"]
             Vhat_set = nothing
         else  # load Vhat_set if precomputed
             @info "Loading Vhat"
-            Vhat_set = JLD.load("./saved_data/Vhat_set_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
+            if parsed_args["relabel"]
+                Vhat_set = JLD.load("./saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
+            else
+                Vhat_set = JLD.load("./saved_data/Vhat_set_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
+            end
             N_sample = Vhat_set.N_sample
             Vhat_timecost = Vhat_set.timecost
             m = size(Vhat_set.Vhat, 2)
@@ -208,6 +212,7 @@ RI = randindex(matched_assignment[trainmax+1:end], y[trainmax+1:end])
 io = open("$(parsed_args["dataset"])_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
 write(io, "Data set: $(parsed_args["dataset"])  testing points: $n; training data: $ntrain\n") 
+write(io, "Target number of clusters: $k \n")
 write(io, "rangeθ: $rangeθs, dimθ: $dimθ; N_sample: $N_sample; m: $m ; Vhat_timecost = $Vhat_timecost \n")
 write(io, "Must-link constraints weight: $(parsed_args["C"]) \n")
 write(io, "Algorithm: $algorithm 

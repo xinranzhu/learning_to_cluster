@@ -83,7 +83,7 @@ n_N_sample = length(N_sample_set)
 @info "size(range_set) = $(size(ranges)); size(N_sample_set) = $(size(N_sample_set))"
 
 for j in 1:3
-    for i in [4, 5, 7]
+    for i = 6
         rangeθs = reshape(ranges[i, :], 1, 2)
         rangeθ = parsed_args["single"] ? rangeθs : repeat(rangeθs, d, 1)
         N_sample = N_sample_set[j]

@@ -6,6 +6,7 @@ include("../datastructs.jl")
 
 # using Optim
 using Distances
+using TensorOperations
 using Dates
 
 """
@@ -147,10 +148,10 @@ end
 # each valuation takes 22s and 50s if deriv.
 function loss_fun_reduction(X::Array{T, 2}, k::Int64, θ, traindata::AbstractTrainingData, Vhat::Array{T, 2}; 
                             I_rows::Union{Array{Int64,1}, Nothing} = nothing, if_deriv::Bool = true) where T<:Float64
-    @info "Evaluate loss func, current θ" θ
     dimθ = length(θ)
     n, m = size(Vhat)
     ntrain = traindata.n
+    idtrain = 1:ntrain
     Apm = traindata.Apm
     # compute Y(θ)
     L, dL = laplacian_L(X, θ; if_deriv = if_deriv) # 9s
@@ -177,23 +178,26 @@ function loss_fun_reduction(X::Array{T, 2}, k::Int64, θ, traindata::AbstractTra
             @tensor dH[i,j,k] = Vhat'[i, s] * dL[s, l, k] * Vhat[l, j] 
         end
         dY = comp_dY(Y, Λ, H, dH, dimθ)
-        if dimθ == 1
-            Vhat_train_dY = (@view Vhat[1:ntrain, :]) * dY
-            # K = Array{Float64, 2}(undef, ntrain, ntrain)
-            K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
-            dloss = dot(Apm, K)
+        if dimθ > 1
+            Vhat_train_dY = Array{Float64, 3}(undef, ntrain, k, dimθ)
+            Vhattrain = @view Vhat[idtrain, :]
+            @tensor Vhat_train_dY[i, j, k] = Vhattrain[i, s] * dY[s, j, k]
         else
-            dloss = Array{Float64, 1}(undef, dimθ)
-            for i in 1:dimθ
-                Vhat_train_dY = @views Vhat[1:ntrain, :] * dY[:, :, i]
-                K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
-                dloss[i] = dot(Apm, K)
-            end
-            dloss = reshape(dloss, dimθ)
+            Vhat_train_dY = (@view Vhat[idtrain, :]) * dY
         end
+        K1 = broadcast(-, reshape(Vhat_train_Y, ntrain, 1, k, 1), reshape(Vhat_train_Y, 1, ntrain, k, 1))
+        K2 = broadcast(-, reshape(Vhat_train_dY, ntrain, 1, k, dimθ), reshape(Vhat_train_dY, 1, ntrain, k, dimθ))
+        @assert size(K1) == (ntrain, ntrain, k, 1)
+        @assert size(K2) == (ntrain, ntrain, k, dimθ)
+        K3 = dropdims(sum(broadcast(*, K1, K2); dims=3); dims=3)
+        @assert size(K3) == (ntrain, ntrain, dimθ)
+        dloss = broadcast(*, reshape(Apm, ntrain, ntrain, 1), K3)
+        dloss = reshape(sum(dloss; dims=[1, 2]), dimθ)
+        dloss = dimθ == 1 ? dloss[1] : dloss
     else 
         dloss = nothing
     end
+    @info "Evaluate loss func, loss = $loss" 
     return loss, dloss
 end
 

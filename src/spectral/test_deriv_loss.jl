@@ -46,7 +46,7 @@ testdata = testingData(data[1:n, :], label[1:n])
 X = testdata.X; y = testdata.y
 d = testdata.d; n = testdata.n 
 @info "Size of testing data" size(X), size(y)
-traindata = trainingData(X, y, 0.1)
+traindata = trainingData(X, y, 200)
 ntrain = traindata.n
 Apm = traindata.Apm
 @info "Size of training data" ntrain

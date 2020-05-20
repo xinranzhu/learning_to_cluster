@@ -40,6 +40,9 @@ s = ArgParseSettings()
         help = "use which settings of rangeθ -- see precompute_Vhat"
         arg_type = Int
         default = 1
+    "--relabel"
+        help = "relabel or not"
+        action = :store_true
 end
 parsed_args = parse_args(ARGS, s)
 
@@ -47,6 +50,15 @@ df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
 data = convert(Matrix, df[:,2:8]) 
 label = convert(Array, df[:, 9]) # 1 ~ 29
 k = 29
+
+# relabel: view <= 5 as one cluster, and >=15 as one cluster
+if parsed_args["relabel"]
+    label[label .<= 5] .= 5
+    label[label .>= 15] .= 15
+    label .-= 4
+    k = 11
+end
+@info "Target number of clusterings $k"
 
 randseed = 1234; rng = MersenneTwister(randseed)
 ind_shuffle = randperm(rng, size(data, 1))
@@ -60,12 +72,15 @@ testdata = testingData(data[1:n, :], label[1:n])
 X = testdata.X; y = testdata.y
 d = testdata.d
 @info "Size of testing data" size(X), size(y)
-traindata = trainingData(X, y, 0.1)
+traindata = trainingData(X, y, 200)
 ntrain = traindata.n
 Apm = traindata.Apm
 @info "Size of training data" size(traindata.X), size(traindata.y), typeof(traindata)
 
-Vhat_set = JLD.load("../abalone/saved_data/Vhat_set_false_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
+if parsed_args["relabel"]
+    Vhat_set = JLD.load("../abalone/saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
+else
+
 Vhat = Vhat_set.Vhat
 timecost = Vhat_set.timecost
 I_rows = Vhat_set.I_rows

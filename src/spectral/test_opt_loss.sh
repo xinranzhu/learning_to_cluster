@@ -1,13 +1,14 @@
 set -x 
 
-julia test_opt_loss.jl --set_range 1 --set_Nsample 1 > log_test_optloss_1_1.txt 2>&1
+julia test_opt_loss.jl --set_range 4 --set_Nsample 1 2>&1 | tee > log_test_optloss_4_1.txt 
 
-julia test_opt_loss.jl --set_range 1 --set_Nsample 2 > log_test_optloss_1_2.txt 2>&1
+# julia test_opt_loss.jl --set_range 4 --set_Nsample 2 2>&1 | tee > log_test_optloss_4_2.txt 
 
-julia test_opt_loss.jl --set_range 1 --set_Nsample 3 > log_test_optloss_1_3.txt 2>&1
+# julia test_opt_loss.jl --set_range 4 --set_Nsample 3 2>&1 | tee > log_test_optloss_4_3.txt 
 
-julia test_opt_loss.jl --set_range 2 --set_Nsample 1 > log_test_optloss_2_1.txt 2>&1
+# julia test_opt_loss.jl --set_range 5 --set_Nsample 1 2>&1 | tee > log_test_optloss_5_1.txt 
 
-julia test_opt_loss.jl --set_range 2 --set_Nsample 2 > log_test_optloss_2_2.txt 2>&1
+# julia test_opt_loss.jl --set_range 5 --set_Nsample 2 2>&1 | tee > log_test_optloss_5_2.txt 
 
-julia test_opt_loss.jl --set_range 2 --set_Nsample 3 > log_test_optloss_2_3.txt 2>&1
+# julia test_opt_loss.jl --set_range 5 --set_Nsample 3 2>&1 | tee > log_test_optloss_5_3.txt 
+

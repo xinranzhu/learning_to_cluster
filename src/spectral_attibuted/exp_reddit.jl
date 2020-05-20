@@ -21,7 +21,7 @@ using Optim
 include("model_reduction.jl")
 include("../datastructs.jl")
 include("../attributed/attributed.jl")
-
+include("../conductance/conductance.jl")
 
 s = ArgParseSettings()
 # The defaut setting: --test: multiple length scale, QMC
@@ -78,7 +78,8 @@ after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
 
 # 5. evaluate clustering results using some metric 
-#TODO
+A = getBodyWeightedAdj()
+conduct = conductance(A, assignment)
 
 # 6. write results into results.txt
 io = open("Reddit_results.txt", "a")
