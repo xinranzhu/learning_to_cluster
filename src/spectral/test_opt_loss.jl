@@ -77,9 +77,7 @@ ntrain = traindata.n
 Apm = traindata.Apm
 @info "Size of training data" size(traindata.X), size(traindata.y), typeof(traindata)
 
-if parsed_args["relabel"]
-    Vhat_set = JLD.load("../abalone/saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
-else
+Vhat_set = JLD.load("../abalone/saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
 
 Vhat = Vhat_set.Vhat
 timecost = Vhat_set.timecost

@@ -100,3 +100,16 @@ after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=3) 
 @info "loss_deriv, multidimensional parameter: $err2. Each evaluation took $(elapsedmin/ntest) min." 
 
+
+# ┌ Info: Size of whole dataset:
+# └   (size(data), size(label)) = ((4177, 7), (4177,))
+# [ Info: (4177, 7)
+# ┌ Info: Size of testing data
+# └   (size(X), size(y)) = ((4177, 7), (4177,))
+# ┌ Info: Size of training data
+# └   ntrain = 200
+# [ Info: Finish loading Vhat, m_single = 142, m_multi =  785
+# [ Info: Start 1d derivative test
+# [ Info: loss_deriv, one-dim parameter: 3.234080664676881e-9, 5.386129081762654e-12. Each evaluation took 0.6381 min.
+# [ Info: Start multi-dim derivative test
+# [ Info: loss_deriv, multidimensional parameter: 6.442596083714374e-11. Each evaluation took 1.3138999999999998 min.
