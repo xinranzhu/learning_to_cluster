@@ -33,12 +33,12 @@ n_N_sample = length(N_sample_set)
 n_k = length(k_set)
 @info n_range, n_N_sample, n_k
 failedID = []
-for j in 2:n_N_sample
+for j = 1
     N_sample = N_sample_set[j]
     for l in 1:n_k
         k = k_set[l]
         for i in 1:n_range
-            try
+            # try
                 rangeθ = ranges[i, :, :]
                 @assert size(rangeθ) == (dimθ, 2)
                 @info "Start computing Vhat, range $i and N_sample = $N_sample, k = $k"
@@ -52,10 +52,10 @@ for j in 2:n_N_sample
                 Vhat_set = (Vhat = Vhat, rangeθ = rangeθ, N_sample = N_sample, timecost = elapsedmin, k = k)
                 save("./saved_data/Vhat_set_$(i)_$(j)_$(l).jld", "data", Vhat_set)
                 @info "Finish computing Vhat size, time cost", size(Vhat), elapsedmin
-            catch err
-                append!(failedID, [i, j, l])
-                @info "Faied ID " [i, j, l]
-            end
+            # catch
+            #     append!(failedID, [i, j, l])
+            #     @info "Faied ID " [i, j, l]
+            # end
         end
     end
 end

@@ -117,3 +117,5 @@ src/abalone/saved_data
 src/spectral_attibuted/saved_data
 
 log*
+src/.ipynb_checkpoints/test_reduction-checkpoint.ipynb
+src/test_reduction.ipynb

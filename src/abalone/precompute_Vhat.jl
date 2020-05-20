@@ -33,6 +33,9 @@ s = ArgParseSettings()
     "--single"
         help = "use single θ or multi-dim"
         action = :store_true
+    "--relabel"
+        help = "relabel or not"
+        action = :store_true
 end
 parsed_args = parse_args(ARGS, s)
 
@@ -40,6 +43,15 @@ df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
 data = convert(Matrix, df[:,2:8]) 
 label = convert(Array, df[:, 9]) # 1 ~ 29
 k = 29
+
+# relabel: view <= 5 as one cluster, and >=15 as one cluster
+if parsed_args["relabel"]
+    label[label .<= 5] .= 5
+    label[label .>= 15] .= 15
+    label .-= 4
+    k = 11
+end
+@info "Target number of clusterings $k"
 
 randseed = 1234; rng = MersenneTwister(randseed)
 ind_shuffle = randperm(rng, size(data, 1))
@@ -62,15 +74,16 @@ N_sample_set = load("./saved_data/abalone_Nsample_set.jld")["data"]
 #         0.1 1500; 
 #         1 200;
 #         1 1000
-#         1 1500]
+#         1 1500
+#         0.1, 30]
 # N_sample_set = [100, 500, 1000, 1500]
 
 n_range = size(ranges, 1)
 n_N_sample = length(N_sample_set)
+@info "size(range_set) = $(size(ranges)); size(N_sample_set) = $(size(N_sample_set))"
 
-
-for j in 1:n_N_sample
-    for i = 7
+for j in 1:3
+    for i in [4, 5, 7]
         rangeθs = reshape(ranges[i, :], 1, 2)
         rangeθ = parsed_args["single"] ? rangeθs : repeat(rangeθs, d, 1)
         N_sample = N_sample_set[j]
@@ -82,7 +95,7 @@ for j in 1:n_N_sample
         m = size(Vhat, 2)
         @assert m > k 
         Vhat_set = (Vhat = Vhat, rangeθ = rangeθ, I_rows = I_rows, N_sample = N_sample, timecost = elapsedmin)
-        save("./saved_data/Vhat_set_$(parsed_args["single"])_$(i)_$(j).jld", "data", Vhat_set)
+        save("./saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["single"])_$(i)_$(j).jld", "data", Vhat_set)
         @info "Finish computing Vhat size, time cost", size(Vhat), elapsedmin
     end
 end

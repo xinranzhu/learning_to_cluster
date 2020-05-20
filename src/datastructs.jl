@@ -8,12 +8,11 @@ struct trainingData <: AbstractTrainingData
     n::Int64
     d::Int64 
     Apm::Symmetric{Int64,Array{Int64,2}}
-    function trainingData(X::Array{T, 2}, y::Array{Int64, 1}, p::T) where T<:Float64 
-        ntrain = Int(floor(n*p))
+    function trainingData(X::Array{T, 2}, y::Array{Int64, 1}, ntrain::Int64; C::Int64 = 1) where T<:Float64 
         Xtrain = X[1:ntrain, :]
         ytrain = y[1:ntrain]
         idtrain = 1:ntrain
-        Apm = gen_constraints(ntrain, ytrain)  #constraint matrix
+        Apm = gen_constraints(ntrain, ytrain; C = C)  #constraint matrix
         return new(Xtrain, ytrain, ntrain, size(Xtrain, 2), Apm)
     end
 end
@@ -34,13 +33,13 @@ struct atttraindata <: AttributedTrainingData
     id::Array{Int64, 1}
     y::Array{Int64, 1} # training labels
     Apm::Symmetric{Int64,Array{Int64,2}} # constraints matrix
-    function atttraindata(n::Int64, id::Array{Int64, 1}, y::Array{Int64, 1})
-        Apm = gen_constraints(n, y)
+    function atttraindata(n::Int64, id::Array{Int64, 1}, y::Array{Int64, 1}; C::Int64 = 1)
+        Apm = gen_constraints(n, y; C = C)
         return new(n, id, y, Apm)
     end
 end
 
-function gen_constraints(n::Int64, y::Array{Int64, 1})
+function gen_constraints(n::Int64, y::Array{Int64, 1}; C::Int64 = 1)
     Apm = Array{Float64, 2}(undef, n, n)
     R = CartesianIndices(Apm)
     for I in R 
@@ -48,7 +47,7 @@ function gen_constraints(n::Int64, y::Array{Int64, 1})
         if i == j
             constraint = 0
         elseif y[i] == y[j]
-            constraint = 1
+            constraint = C
         else
             constraint = -1
         end

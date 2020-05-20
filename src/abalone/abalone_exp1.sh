@@ -62,23 +62,50 @@ set -x
 # julia exp_script.jl --single --reduction --set_range 6 --set_Nsample 4 > log_exp_abalone_spectral_reduction_single_range6_N4.txt 2>&1
 
 # do only [1, 1000] and [1, 200] range; all N samples
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1 --trainratio 0.2 > log_exp_abalone_reduction_single_range4_N1_p2.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 2 --trainratio 0.2 > log_exp_abalone_reduction_single_range4_N2_p2.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 3 --trainratio 0.2 > log_exp_abalone_reduction_single_range4_N3_p2.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 4 --trainratio 0.2 > log_exp_abalone_reduction_single_range4_N4_p2.txt 2>&1
 
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 1 --trainratio 0.2 > log_exp_abalone_reduction_single_range5_N1_p2.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 2 --trainratio 0.2 > log_exp_abalone_reduction_single_range5_N2_p2.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 3 --trainratio 0.2 > log_exp_abalone_reduction_single_range5_N3_p2.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 4 --trainratio 0.2 > log_exp_abalone_reduction_single_range5_N4_p2.txt 2>&1
+# 29 clusters, only evaluate the testing set (size 3177)
+# julia exp_script.jl  > log_exp_abalone_kmeans.txt 2>&1
+# julia exp_script.jl --TSNE > log_exp_abalone_TSNE.txt 2>&1
 
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1 --trainratio 0.3 > log_exp_abalone_reduction_single_range4_N1_p3.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 2 --trainratio 0.3 > log_exp_abalone_reduction_single_range4_N2_p3.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 3 --trainratio 0.3 > log_exp_abalone_reduction_single_range4_N3_p3.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 4 --trainratio 0.3 > log_exp_abalone_reduction_single_range4_N4_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1  > log_exp_abalone_reduction_single_range4_N1_p2.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 2  > log_exp_abalone_reduction_single_range4_N2_p2.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 3  > log_exp_abalone_reduction_single_range4_N3_p2.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 4  > log_exp_abalone_reduction_single_range4_N4_p2.txt 2>&1
 
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 1 --trainratio 0.3 > log_exp_abalone_reduction_single_range5_N1_p3.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 2 --trainratio 0.3 > log_exp_abalone_reduction_single_range5_N2_p3.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 3 --trainratio 0.3 > log_exp_abalone_reduction_single_range5_N3_p3.txt 2>&1
-julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 4 --trainratio 0.3 > log_exp_abalone_reduction_single_range5_N4_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 1  > log_exp_abalone_reduction_single_range5_N1_p2.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 2  > log_exp_abalone_reduction_single_range5_N2_p2.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 3  > log_exp_abalone_reduction_single_range5_N3_p2.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 4  > log_exp_abalone_reduction_single_range5_N4_p2.txt 2>&1
 
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1 --trainsize 400 > log_exp_abalone_reduction_single_range4_N1_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 2 --trainsize 400 > log_exp_abalone_reduction_single_range4_N2_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 3 --trainsize 400 > log_exp_abalone_reduction_single_range4_N3_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 4 --trainsize 400 > log_exp_abalone_reduction_single_range4_N4_p3.txt 2>&1
+
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 1 --trainsize 400 > log_exp_abalone_reduction_single_range5_N1_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 2 --trainsize 400 > log_exp_abalone_reduction_single_range5_N2_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 3 --trainsize 400 > log_exp_abalone_reduction_single_range5_N3_p3.txt 2>&1
+# julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 4 --trainsize 400 > log_exp_abalone_reduction_single_range5_N4_p3.txt 2>&1
+
+# adjust loss fun 
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1 --C 10 > log_exp_abalone_reduction_single_range4_N1_p2.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 2 --C 10 > log_exp_abalone_reduction_single_range4_N2_p2.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 3 --C 10  > log_exp_abalone_reduction_single_range4_N3_p2.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 4 --C 10  > log_exp_abalone_reduction_single_range4_N4_p2.txt 2>&1
+
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 1 --C 10  > log_exp_abalone_reduction_single_range5_N1_p2.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 2 --C 10  > log_exp_abalone_reduction_single_range5_N2_p2.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 3 --C 10  > log_exp_abalone_reduction_single_range5_N3_p2.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 4 --C 10  > log_exp_abalone_reduction_single_range5_N4_p2.txt 2>&1
+
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range4_N1_p3.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 2 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range4_N2_p3.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 3 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range4_N3_p3.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 4 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range4_N4_p3.txt 2>&1
+
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 1 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range5_N1_p3.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 2 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range5_N2_p3.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 3 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range5_N3_p3.txt 2>&1
+julia exp_script.jl --single --reduction --set_range 5 --set_Nsample 4 --trainsize 400 --C 10 > log_exp_abalone_reduction_single_range5_N4_p3.txt 2>&1
+
+# try relabel with new Vhat

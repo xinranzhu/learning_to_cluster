@@ -176,7 +176,7 @@ function comp_dY(Y::Array{T, 2}, Λ::Array{T, 1}, H::Array{T, 2}, dH::Union{Arra
         dHy .-= y * (y' * dHy)
         dY[:, i, :] = [(Λ[i] * I(m) - H); y'] \ [dHy; zeros(dimθ)'] 
     end
-    dY = dimθ == 1 ? dropdims(dY; dims = 3) : dY
+    # dY = dimθ == 1 ? dropdims(dY; dims = 3) : dY
     return dY
 end
 

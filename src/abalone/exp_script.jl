@@ -47,10 +47,10 @@ s = ArgParseSettings()
         help = "silimarity parameter in spectral clustering, train if 0"
         arg_type = Float64
         default = 0.
-    "--trainratio"
-        help = "ratio of training set to testing set"
-        arg_type = Float64
-        default = 0.1
+    "--trainsize"
+        help = "size of training set"
+        arg_type = Int
+        default = 200
     "--reduction"
         help = "use model reduction or not"
         action = :store_true
@@ -73,7 +73,14 @@ s = ArgParseSettings()
         help = "mannually set rangeθ"
         arg_type = Float64
         nargs = 2
-        default = [0.1, 2000.] # for abalone 
+        default = [0.1, 2000.] # for abalone
+    "--relabel"
+        help = "relabel or not"
+        action = :store_true
+    "--C"
+        help = "weight of must-link constraints in Apm"
+        arg_type = Int
+        default = 1
 end
 parsed_args = parse_args(ARGS, s)
 
@@ -84,6 +91,22 @@ df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
 data = convert(Matrix, df[:,2:8]) 
 label = convert(Array, df[:, 9]) # 1 ~ 29
 k = 29
+
+# relabel: view <= 5 as one cluster, and >=15 as one cluster
+if parsed_args["relabel"]
+    label[label .<= 5] .= 5
+    label[label .>= 15] .= 15
+    label .-= 4
+    k = 11
+end
+@info "Target number of clusterings $k"
+
+trainmax = 1000; 
+ntrain = parsed_args["trainsize"]
+if ntrain > trainmax
+    @warn "Trying to assign $ntrain training data; Maximum size of training data is $trainmax."
+    ntrain = trainmax
+end
 # elseif parsed_args["dataset"] == "MNIST"
 #     dataraw, label = MNIST.testdata(Float64)
 #     data = reshape(permutedims(dataraw,(3, 1, 2)), size(dataraw, 3), size(dataraw,1)*size(dataraw,2));
@@ -109,8 +132,7 @@ testdata = testingData(data[1:n, :], label[1:n])
 X = testdata.X; y = testdata.y
 d = testdata.d
 @info "Size of testing data" size(X), size(y)
-traindata = trainingData(X, y, parsed_args["trainratio"])
-ntrain = traindata.n
+traindata = trainingData(X, y, ntrain; C = parsed_args["C"])
 @info "Size of training data" size(traindata.X), size(traindata.y), typeof(traindata)
 
 range_set = JLD.load("./saved_data/abalone_range_set.jld")["data"]
@@ -179,14 +201,15 @@ elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_t
 # assign labels and return accuracy
 # max_acc, matched_assignment = ACC_match_labels(assignment, y, k, parsed_args["dataset"])
 @info "Matching labels, ntrain:" ntrain
-max_acc, matched_assignment = bipartite_match_labels(assignment, y, k; ntrain = ntrain) # assignment is updated
-RI = randindex(matched_assignment[ntrain+1:end], y[ntrain+1:end])
+max_acc, matched_assignment = bipartite_match_labels(assignment, y, k; trainmax = trainmax) # assignment is updated
+RI = randindex(matched_assignment[trainmax+1:end], y[trainmax+1:end])
 
 
 io = open("$(parsed_args["dataset"])_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
 write(io, "Data set: $(parsed_args["dataset"])  testing points: $n; training data: $ntrain\n") 
 write(io, "rangeθ: $rangeθs, dimθ: $dimθ; N_sample: $N_sample; m: $m ; Vhat_timecost = $Vhat_timecost \n")
+write(io, "Must-link constraints weight: $(parsed_args["C"]) \n")
 write(io, "Algorithm: $algorithm 
     Time cost:                                   $(@sprintf("%.5f", elapsedmin))
     Accuracy (ACC):                              $(@sprintf("%.5f", max_acc))
