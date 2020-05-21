@@ -49,7 +49,7 @@ const n = 35776
 const dimθ = 12
 
 θ = nothing; traindata = nothing
-if parse_args["idtheta"] == 0 # 2a) training data/constraints
+if parsed_args["idtheta"] == 0 # 2a) training data/constraints
     (idtrain, ytrain) = trainInfo_fixed()
     ntrain = length(idtrain)
     traindata = atttraindata(ntrain, idtrain, ytrain)
@@ -57,7 +57,7 @@ if parse_args["idtheta"] == 0 # 2a) training data/constraints
 else # 2b) skip training, load some assigned theta
     θ_set = JLD.load("./saved_data/reddit_theta_set.jld")["data"] # N * 12
     @assert size(θ_set, 2) == dimθ
-    θ = θ_set[parse_args["idtheta"], :]
+    θ = θ_set[parsed_args["idtheta"], :]
     @assert (θ .> rangeθ[:, 1]) && (θ .< rangeθ[:, 2])
 end
 

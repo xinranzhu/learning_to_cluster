@@ -8,6 +8,7 @@ using Dates
 using Arpack
 using LinearAlgebra
 using KrylovKit
+using LineSearches
 
 include("../datastructs.jl")
 
@@ -42,7 +43,10 @@ function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
         θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
 
         # inner_optimizer = LBFGS()
-        inner_optimizer = ConjugateGradient()
+        # inner_optimizer = ConjugateGradient()
+        nlprecon = GradientDescent(alphaguess=LineSearches.InitialStatic(alpha=0.1,scaled=true),
+                           linesearch=LineSearches.Static())
+        inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
         results = Optim.optimize(loss, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
         θ = Optim.minimizer(results)
         loss_opt = loss(θ)
