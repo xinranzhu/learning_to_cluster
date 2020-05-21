@@ -56,7 +56,6 @@ end
 # using Optim
 before = Dates.now()
 inner_optimizer = ConjugateGradient()
-results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
 
 # results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, LBFGS())
 
@@ -65,6 +64,7 @@ results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init,
 # nlprecon = GradientDescent(alphaguess=LineSearches.InitialStatic(alpha=1e-4,scaled=true),
 #                            linesearch=LineSearches.Static())
 # inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
+results = Optim.optimize(loss, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
 
 θ = Optim.minimizer(results)
 after = Dates.now()

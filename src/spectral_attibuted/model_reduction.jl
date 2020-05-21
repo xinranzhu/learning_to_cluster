@@ -35,14 +35,17 @@ function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
         loss(θ) = loss_fun_reduction(n, k, θ, traindata, Vhat; if_deriv = false)[1] 
         loss_deriv(θ) = loss_fun_reduction(n, k, θ, traindata, Vhat)[2] 
         function loss_deriv!(G, θ)
-            G = loss_deriv(θ)
+            G .= loss_deriv(θ)
         end
         @info "Start training"
         # θ_init = rand(Uniform(rangeθ[1, 1], rangeθ[1, 2]), dimθ, 1)
         θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
-        inner_optimizer = LBFGS()
+
+        # inner_optimizer = LBFGS()
+        inner_optimizer = ConjugateGradient()
         results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
         θ = Optim.minimizer(results)
+        loss_opt = loss(θ)
         @info "Finish training, optimal θ" θ
         after = Dates.now()
         elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
@@ -74,7 +77,7 @@ function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
     # put Vhat*Y into kmeans
     @info "Start kmeans"
     @time a =  kmeans_reduction(Vhat, Y, k; maxiter = 200)    
-    return a, θ
+    return a, θ, loss_opt
 end
 
 function comp_Vhat(n::Int64, k::Int64, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false) where T<:Float64
@@ -147,16 +150,16 @@ function loss_fun_reduction(n::Int64, k::Int64, θ::Union{Array{T, 1}, T}, train
         end
         dY = comp_dY(Y, Λ, H, dH, dimθ)
         # compute dloss
-        # dloss = Array{Float64, 1}(undef, dimθ)
-        # for i in 1:dimθ
-        #     Vhat_train_dY = @views Vhat[idtrain, :] * dY[:, :, i]
-        #     K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
-        #     dloss[i] = dot(Apm, K)
-        # end
-        # dloss = reshape(dloss, dimθ)
-        # compute dloss
+        dloss_test = Array{Float64, 1}(undef, dimθ)
+        for i in 1:dimθ
+            Vhat_train_dY = @views Vhat[idtrain, :] * dY[:, :, i]
+            K = pairwise!(K, SqEuclidean(), Vhat_train_Y, Vhat_train_dY, dims=1)
+            dloss_test[i] = dot(Apm, K)
+        end
+        dloss_test = reshape(dloss_test, dimθ)
+        # compute dloss_test
         Vhat_train_dY = Array{Float64, 3}(undef, ntrain, k, dimθ)
-        Vhattrain = @view Vhat[idtrain, :]
+        Vhattrain = Vhat[idtrain, :]
         @tensor Vhat_train_dY[i, j, k] = Vhattrain[i, s] * dY[s, j, k]
         K1 = broadcast(-, reshape(Vhat_train_Y, ntrain, 1, k, 1), reshape(Vhat_train_Y, 1, ntrain, k, 1))
         K2 = broadcast(-, reshape(Vhat_train_dY, ntrain, 1, k, dimθ), reshape(Vhat_train_dY, 1, ntrain, k, dimθ))
@@ -164,9 +167,28 @@ function loss_fun_reduction(n::Int64, k::Int64, θ::Union{Array{T, 1}, T}, train
         @assert size(K2) == (ntrain, ntrain, k, dimθ)
         K3 = dropdims(sum(broadcast(*, K1, K2); dims=3); dims=3)
         @assert size(K3) == (ntrain, ntrain, dimθ)
-        dloss = broadcast(*, reshape(Apm, ntrain, ntrain, 1), K3)
-        dloss = reshape(sum(dloss; dims=[1, 2]), dimθ)
-        dloss = dimθ == 1 ? dloss[1] : dloss
+        dloss_test = broadcast(*, reshape(Apm, ntrain, ntrain, 1), K3)
+        dloss_test = reshape(sum(dloss_test; dims=[1, 2]), dimθ)
+        dloss_test = dimθ == 1 ? dloss_test[1] : dloss_test
+        
+        dloss = zeros(dimθ)
+
+        R = CartesianIndices(Apm)
+        Vhattrain = @view Vhat[idtrain, :]
+        dloss = zeros(dimθ)
+            for i in 1:dimθ
+            YdY = @views Y[:, :] * dY[:, :, i]'
+            @info size(i)
+            for I in R
+                j = Tuple(I)[1]
+                k = Tuple(I)[2]
+                # @info "i, j = $i, $j"
+                wjk = Vhattrain[j,:] - Vhattrain[k,:]
+                # @info size(wjk)
+                dloss[i] += Apm[I] .* (wjk'*YdY*wjk)
+            end
+            compare_dloss[i] = abs(dloss_test[i] - dloss[i])
+        end
     else 
         dloss = nothing
     end

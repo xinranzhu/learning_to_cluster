@@ -40,7 +40,7 @@ function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, 
         loss(θ) = loss_fun_reduction(X, k, θ, traindata, Vhat; if_deriv = false)[1] 
         loss_deriv(θ) = loss_fun_reduction(X, k, θ, traindata, Vhat)[2] 
         function loss_deriv!(G, θ)
-            G = loss_deriv(θ)
+            G .= loss_deriv(θ)
         end
         @info "Start training"
         if dimθ == 1
@@ -48,7 +48,17 @@ function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, 
             θ = Optim.minimizer(results)
         else
             θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
-            inner_optimizer = LBFGS()
+
+            # inner_optimizer = GradientDescent(
+            #                                     alphaguess = LineSearches.InitialStatic(alpha = 2., scaled = false),
+            #                                     linesearch = LineSearches.StrongWolfe())
+
+            nlprecon = GradientDescent(alphaguess=LineSearches.InitialStatic(alpha = 2., scaled = false),
+                                        linesearch=LineSearches.StrongWolfe())
+            inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
+       
+            # inner_optimizer = LBFGS()
+            # inner_optimizer = ConjugateGradient()
             results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
             θ = Optim.minimizer(results)
         end
@@ -194,10 +204,10 @@ function loss_fun_reduction(X::Array{T, 2}, k::Int64, θ, traindata::AbstractTra
         dloss = broadcast(*, reshape(Apm, ntrain, ntrain, 1), K3)
         dloss = reshape(sum(dloss; dims=[1, 2]), dimθ)
         dloss = dimθ == 1 ? dloss[1] : dloss
+        @info "Evaluate loss func, θ and loss" θ, loss, norm(dloss)
     else 
         dloss = nothing
     end
-    @info "Evaluate loss func, loss = $loss" 
     return loss, dloss
 end
 

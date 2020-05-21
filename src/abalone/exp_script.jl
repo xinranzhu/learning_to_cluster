@@ -158,11 +158,7 @@ if parsed_args["reduction"]
             Vhat_set = nothing
         else  # load Vhat_set if precomputed
             @info "Loading Vhat"
-            if parsed_args["relabel"]
-                Vhat_set = JLD.load("./saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
-            else
-                Vhat_set = JLD.load("./saved_data/Vhat_set_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
-            end
+            Vhat_set = JLD.load("./saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
             N_sample = Vhat_set.N_sample
             Vhat_timecost = Vhat_set.timecost
             m = size(Vhat_set.Vhat, 2)

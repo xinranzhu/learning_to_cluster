@@ -21,6 +21,7 @@ using JLD
 using JuMP, Ipopt
 using Arpack
 using Optim
+using LineSearches
 # import NLopt.optimize!
 
 include("../TSNE/myTSNE.jl")
@@ -42,6 +43,9 @@ s = ArgParseSettings()
         default = 1
     "--relabel"
         help = "relabel or not"
+        action = :store_true
+    "--single"
+        help = "single param or not"
         action = :store_true
 end
 parsed_args = parse_args(ARGS, s)
@@ -77,7 +81,7 @@ ntrain = traindata.n
 Apm = traindata.Apm
 @info "Size of training data" size(traindata.X), size(traindata.y), typeof(traindata)
 
-Vhat_set = JLD.load("../abalone/saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
+Vhat_set = JLD.load("../abalone/saved_data/Vhat_set_$(parsed_args["relabel"])_$(parsed_args["single"])_$(parsed_args["set_range"])_$(parsed_args["set_Nsample"]).jld")["data"]
 
 Vhat = Vhat_set.Vhat
 timecost = Vhat_set.timecost
@@ -91,16 +95,31 @@ dimθ = size(rangeθ, 1)
 @info "rangeθ=$rangeθ"
 
 θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
+@info "θ_init = $θ_init"
 
 loss(θ) = loss_fun_reduction(X, k, θ, traindata, Vhat; if_deriv = false)[1] 
 loss_deriv(θ) = loss_fun_reduction(X, k, θ, traindata, Vhat)[2] 
 function loss_deriv!(g, θ)
-    g = loss_deriv(θ)
+    g .= loss_deriv(θ)
 end
 
-inner_optimizer = LBFGS()
+# inner_optimizer = ConjugateGradient()
+
+# inner_optimizer = LBFGS()
+
+inner_optimizer = GradientDescent(
+    alphaguess = LineSearches.InitialStatic(alpha = 1., scaled = false),
+    linesearch = LineSearches.StrongWolfe())
+
+nlprecon = GradientDescent(alphaguess=LineSearches.InitialStatic(alpha = 1., scaled = false),
+                           linesearch=LineSearches.StrongWolfe())
+inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
+
 @info "Start optimization"
 @time results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
 θ = Optim.minimizer(results)
+
+
+
 
 @info "final θ" θ

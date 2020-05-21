@@ -33,7 +33,7 @@ n_N_sample = length(N_sample_set)
 n_k = length(k_set)
 @info n_range, n_N_sample, n_k
 failedID = []
-for j = 2:n_N_sample
+for j = 3
     N_sample = N_sample_set[j]
     for l in 1:n_k
         k = k_set[l]

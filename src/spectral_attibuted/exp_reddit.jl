@@ -68,12 +68,11 @@ rangeθ = Vhat_set.rangeθ
 N_sample = Vhat_set.N_sample
 Vhat_timecost = Vhat_set.timecost
 m = size(Vhat_set.Vhat, 2)
-@info "Finish loading Vhat, N_sample, m, timecost" N_sample, m, Vhat_timecost
-
+@info "Finish loading Vhat, N_sample, m, k,timecost" N_sample, m, k, Vhat_timecost
 
 # clustering 
 before = Dates.now()
-assignment, θ = spectral_reduction_main(n, θ, traindata, Vhat_set) 
+assignment, θ, loss_opt = spectral_reduction_main(n, θ, traindata, Vhat_set) 
 after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
 
@@ -86,8 +85,9 @@ io = open("Reddit_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: N/A \n" )
 write(io, "Data set: RedditHyperlinks  testing points: $n; training data: $ntrain\n") 
 write(io, "rangeθ_id: $(parse_args["set_range"]),  dimθ: $dimθ;   N_sample: $N_sample;    m: $m \n")
-write(io, " 
-    Time cost:   $(@sprintf("%.5f", elapsedmin))
-    metric1      $(@sprintf("%.5f", max_acc)) \n")
+write(io, "Target number of clusters: $k \n") 
+write(io, "Optimal loss and θ: $loss_opt, $θ \n") 
+write(io, "Time cost:       $(@sprintf("%.5f", elapsedmin))
+           conductance      $(@sprintf("%.5f", max_acc)) \n")
 close(io)
 
