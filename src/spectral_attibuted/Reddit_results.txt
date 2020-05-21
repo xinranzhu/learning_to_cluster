@@ -26,20 +26,12 @@ Data set: RedditHyperlinks  testing points: 35776; training data: 1662
 rangeθ_id: 1,  dimθ: 12;   N_sample: 200;    m: 497 
 Target number of clusters: 12 
 Optimal θ: [2.6671381734158066, 0.5931582086561903, 0.5001246527165628, 0.6134644474696354, 0.8371539317263909, 0.1359449913444988, 0.6870162040618238, 0.78957836832319, 0.6271068207560877, 0.8419196053267872, 0.5010582532123371, 0.7346727483982489] 
-Time cost:       221.02873
+Time cost:       221.02873 + 877.81972
 conductance      0.03320 
 
 
 
 ### k = 15
-
-2020-05-21T18:29:03.528, randseed: N/A 
-Data set: RedditHyperlinks  testing points: 35776; training data: 1662
-rangeθ_id: 1,  dimθ: 12;   N_sample: 100;    m: 493 
-Target number of clusters: 15 
-Optimal θ: [8.280493605683557, 0.1488694463561837, 0.9321122474273189, 0.6877090070436545, 0.18100136197534922, 0.2693995586303868, 0.7611397864324396, 0.7732606535275299, 0.05498093130890114, 0.01806525028568884, 0.9154320265107143, 0.40243896373698407] 
-Time cost:       81.27164
-conductance      0.02048 
 
 2020-05-21T18:35:52.945, randseed: N/A 
 Data set: RedditHyperlinks  testing points: 35776; training data: 1662
@@ -50,3 +42,13 @@ conductance       0.93543
 baseline: spectral clustering without attribute info 
 Time cost:       81.42437
 conductance       0.22032 
+
+2020-05-21T18:29:03.528, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+rangeθ_id: 1,  dimθ: 12;   N_sample: 100;    m: 493 
+Target number of clusters: 15 
+Optimal θ: [8.280493605683557, 0.1488694463561837, 0.9321122474273189, 0.6877090070436545, 0.18100136197534922, 0.2693995586303868, 0.7611397864324396, 0.7732606535275299, 0.05498093130890114, 0.01806525028568884, 0.9154320265107143, 0.40243896373698407] 
+Time cost:       81.27164
+conductance      0.02048 
+
+
