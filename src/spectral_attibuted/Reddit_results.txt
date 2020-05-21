@@ -52,3 +52,25 @@ Time cost:       81.27164
 conductance      0.02048 
 
 
+
+### k = 25
+
+2020-05-21T19:25:04.73, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+Target number of clusters: 25 
+baseline: random 
+Time cost:       77.26535
+conductance       0.96292 
+baseline: spectral clustering without attribute info 
+Time cost:       78.29215
+conductance       0.30418 
+
+
+2020-05-21T19:09:03.224, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+rangeθ_id: 1,  dimθ: 12;   N_sample: 100;    m: 998 
+Target number of clusters: 25 
+Optimal θ: [8.71839726549523, 0.7227223819412414, 0.3135763788711121, 0.6970621295888708, 0.6835118722345024, 0.7738859144424668, 0.008083214741751332, 0.1501249062977965, 0.8714499949003827, 0.07094287855048464, 0.5913583760414667, 0.43232582728404934] 
+Time cost:       257.99433
+conductance      0.01885 
+
