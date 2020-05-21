@@ -43,7 +43,7 @@ function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
 
         # inner_optimizer = LBFGS()
         inner_optimizer = ConjugateGradient()
-        results = Optim.optimize(loss, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
+        results = Optim.optimize(loss, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
         θ = Optim.minimizer(results)
         loss_opt = loss(θ)
         @info "Finish training, optimal θ" θ
