@@ -74,7 +74,7 @@ dimθ = size(rangeθ, 1)
 N_sample = Vhat_set.N_sample
 Vhat_timecost = Vhat_set.timecost
 m = size(Vhat_set.Vhat, 2)
-@assert sum(θ .> rangeθ[:, 1]) + sum(θ .< rangeθ[:, 2]) == 2*dimθ
+# @assert sum(θ .> rangeθ[:, 1]) + sum(θ .< rangeθ[:, 2]) == 2*dimθ
 @info "Finish loading Vhat, N_sample, m, k,timecost" N_sample, m, k, Vhat_timecost
 
 # clustering 

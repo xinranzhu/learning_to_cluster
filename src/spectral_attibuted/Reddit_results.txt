@@ -12,3 +12,13 @@ baseline results
 Target number of clusters: 12 
 Time cost:       78.67514
 conductance       0.92134 
+
+2020-05-21T16:41:18.037, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+Target number of clusters: 12 
+baseline: random 
+Time cost:       78.67515
+conductance       0.91668 
+baseline: spectral clustering without attribute info 
+Time cost:       79.73485
+conductance       0.24339 

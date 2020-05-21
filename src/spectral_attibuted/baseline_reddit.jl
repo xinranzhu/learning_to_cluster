@@ -18,6 +18,8 @@ using CSV
 using TensorOperations
 using JLD
 using Optim
+using KrylovKit
+
 
 include("model_reduction.jl")
 include("../datastructs.jl")
@@ -72,17 +74,35 @@ assignment = rand([1:k...], n)
 after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
 
+# spectral clustering with theta = 0
+@info "Start spectral clustering with theta = 0"
+before = Dates.now()
+L, _ = laplacian_attributed_L(zeros(dimθ); if_deriv = false)
+_, Vk = eigsolve(L, k, :LR, Float64; issymmetric=true, tol = 1e-16)
+V = hcat(Vk...)
+@info size(V), n, k
+@assert size(V) == (n, k)
+R = kmeans(V', k; maxiter=200, display=:final)
+assignment_spectral = assignments(R)
+after = Dates.now()
+elapsedmin_spectral = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
+
+
 # 5. evaluate clustering results using some metric 
 A = getBodyWeightedAdj()
 conduct = conductance(A, assignment)
+conduct_spectral = conductance(A, assignment_spectral)
 
 # 6. write results into results.txt
 io = open("Reddit_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: N/A \n" )
 write(io, "Data set: RedditHyperlinks  testing points: $n; training data: $ntrain\n") 
-write(io, "baseline results \n")
 write(io, "Target number of clusters: $k \n") 
+write(io, "baseline: random \n")
 write(io, "Time cost:       $(@sprintf("%.5f", elapsedmin))
 conductance       $(@sprintf("%.5f", conduct)) \n")
+write(io, "baseline: spectral clustering without attribute info \n")
+write(io, "Time cost:       $(@sprintf("%.5f", elapsedmin_spectral))
+conductance       $(@sprintf("%.5f", conduct_spectral)) \n")
 close(io)
 
