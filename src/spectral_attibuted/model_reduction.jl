@@ -49,7 +49,6 @@ function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
         inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
         results = Optim.optimize(loss, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer))
         θ = Optim.minimizer(results)
-        loss_opt = loss(θ)
         @info "Finish training, optimal θ" θ
         after = Dates.now()
         elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5)
@@ -80,8 +79,9 @@ function spectral_reduction_main(n::Int64, θ::Union{Array{T, 1}, Nothing},
 
     # put Vhat*Y into kmeans
     @info "Start kmeans"
-    @time a =  kmeans_reduction(Vhat, Y, k; maxiter = 200)    
-    return a, θ, loss_opt
+    @time a =  kmeans_reduction(Vhat, Y, k; maxiter = 200)
+    # loss_opt = loss_fun_reduction(n, k, θ, traindata, Vhat; if_deriv = false)[1] 
+    return a, θ
 end
 
 function comp_Vhat(n::Int64, k::Int64, rangeθ::Array{T, 2}; N_sample::Int = 100, precision::T = 0.995, debug::Bool = false) where T<:Float64
@@ -196,7 +196,7 @@ function loss_fun_reduction(n::Int64, k::Int64, θ::Union{Array{T, 1}, T}, train
     else 
         dloss = nothing
     end
-    @info "Evaluate loss fun, current loss" loss
+    @info "Evaluate loss fun, current loss" loss, θ
     return loss, dloss
 end
 

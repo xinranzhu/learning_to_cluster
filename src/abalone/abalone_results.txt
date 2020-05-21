@@ -953,3 +953,120 @@ Algorithm: Spectral clustering with model reduction (trained θ = 22.52274062375
     Rand index (agreement probability):          0.79981
     Mirkin's index (disagreement probability):   0.20019
     Hubert's index P(agree) - P(disagree):       0.59962 
+
+2020-05-21T03:40:10.76, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 200.0], dimθ: 7; N_sample: 100; m: 226 ; Vhat_timecost = 12.6394 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   35.67250
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T04:45:25.21, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 200.0], dimθ: 7; N_sample: 500; m: 272 ; Vhat_timecost = 69.33093 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   133.34453
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T04:58:36.033, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 200.0], dimθ: 7; N_sample: 1000; m: 281 ; Vhat_timecost = 63.5922 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   75.54010
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T05:39:09.043, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 1000.0], dimθ: 7; N_sample: 100; m: 317 ; Vhat_timecost = 14.10885 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   53.41857
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T06:19:52.646, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 1000.0], dimθ: 7; N_sample: 500; m: 456 ; Vhat_timecost = 64.9305 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   104.43768
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T06:43:38.46, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 1000.0], dimθ: 7; N_sample: 1000; m: 489 ; Vhat_timecost = 63.61348 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   86.15008
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T07:03:28.194, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 1500.0], dimθ: 7; N_sample: 100; m: 310 ; Vhat_timecost = 14.07523 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   32.67558
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.11185
+    Mirkin's index (disagreement probability):   0.88815
+    Hubert's index P(agree) - P(disagree):       -0.77630 
+
+2020-05-21T07:52:24.527, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 1500.0], dimθ: 7; N_sample: 500; m: 485 ; Vhat_timecost = 32.67945 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [271.8702129528406, 1074.3449847845006, 705.8835634349684, 162.6481781735721, 522.2589210571628, 1249.7539192292213, -47.86448345272498]) 
+    Time cost:                                   80.38735
+    Accuracy (ACC):                              0.26912
+    Adjusted Rand index:                         0.06742
+    Rand index (agreement probability):          0.76680
+    Mirkin's index (disagreement probability):   0.23320
+    Hubert's index P(agree) - P(disagree):       0.53360 
+
+2020-05-21T14:16:30.636, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 29 
+rangeθ: [1.0 200.0], dimθ: 7; N_sample: 1000; m: 528 ; Vhat_timecost = 51.69015 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN, NaN, NaN, NaN, NaN]) 
+    Time cost:                                   59.32362
+    Accuracy (ACC):                              0.16871
+    Adjusted Rand index:                         0.00000
+    Rand index (agreement probability):          0.10429
+    Mirkin's index (disagreement probability):   0.89571
+    Hubert's index P(agree) - P(disagree):       -0.79142 

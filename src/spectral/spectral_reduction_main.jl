@@ -47,8 +47,8 @@ function spectral_reduction_main(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, 
             results = Optim.optimize(loss, rangeθ[1, 1], rangeθ[1, 2])
             θ = Optim.minimizer(results)
         else
-            θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
-
+            # θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
+            θ_init = θ[:]
             # inner_optimizer = GradientDescent(
             #                                     alphaguess = LineSearches.InitialStatic(alpha = 2., scaled = false),
             #                                     linesearch = LineSearches.StrongWolfe())

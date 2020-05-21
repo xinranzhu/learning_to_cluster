@@ -19,6 +19,7 @@ using CSV
 using TensorOperations
 using JLD
 using Optim
+using LineSearches
 
 include("../TSNE/myTSNE.jl")
 include("../kmeans_match_labels.jl")
@@ -167,6 +168,9 @@ if parsed_args["reduction"]
         end
         θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
         θ_init = dimθ == 1 ? θ_init[1] : θ_init 
+        if !parsed_args["single"]
+            θ_init = [180.01699864462196, 107.39498972302539, 20.01724343783694, 198.42119403069842, 120.3707825049378, 9.984329835191813, 143.56003802364557]
+        end
         assignment, θ = spectral_reduction_main(X, k, θ_init, rangeθ; traindata = traindata, Vhat_set = Vhat_set)
         algorithm = "Spectral clustering with model reduction (trained θ = $(θ))"
     end
