@@ -30,7 +30,6 @@ Time cost:       221.02873 + 877.81972
 conductance      0.03320 
 
 
-
 ### k = 15
 
 2020-05-21T18:35:52.945, randseed: N/A 
@@ -74,3 +73,23 @@ Optimal θ: [8.71839726549523, 0.7227223819412414, 0.3135763788711121, 0.6970621
 Time cost:       257.99433 (trainig 179.73255 + Vhat 78.29215)
 conductance      0.01885 
 
+
+### k = 18
+
+2020-05-21T21:36:27.266, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+rangeθ_id: 1,  dimθ: 12;   N_sample: 100;    m: 495 
+Target number of clusters: 18 
+Optimal θ: [2.7545352975365907, 0.2225150550912589, 0.5406648005644531, 0.16745922043883968, 0.05404266869254614, 0.5275948384428386, 0.043270972016568904, 0.8825064906796511, 0.15515554391790015, 0.2846260929550612, 0.22027616069036676, 0.5532294408875795] 
+Time cost:       77.80355 + 1080.99547
+conductance      0.02040 
+
+2020-05-21T21:42:14.128, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+Target number of clusters: 20 
+baseline: random 
+Time cost:       77.22829
+conductance       0.95270 
+baseline: spectral clustering without attribute info 
+Time cost:       78.23350
+conductance       0.20659 
