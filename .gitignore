@@ -113,9 +113,12 @@ src/abalone/log_abalone_Vhat.txt
 src/test_reduction.ipynb
 src/.ipynb_checkpoints/test_reduction-checkpoint.ipynb
 
-src/abalone/saved_data
-src/spectral_attibuted/saved_data
+# src/abalone/saved_data
+src/spectral_attibuted/saved_data/
 
 log*
 src/.ipynb_checkpoints/test_reduction-checkpoint.ipynb
 src/test_reduction.ipynb
+src/abalone/saved_data/Vhat_set_false*.jld
+src/abalone/saved_data/Vhat_set_true_false*.jld
+a.out*

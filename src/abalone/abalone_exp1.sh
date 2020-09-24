@@ -178,13 +178,19 @@ set -x
 
 #####################
 # multi-dim param
-julia exp_script.jl --reduction --set_range 4 --set_Nsample 1 --relabel  > log_exp_abalone_reduction_multi_range4_N1.txt 2>&1
-julia exp_script.jl --reduction --set_range 4 --set_Nsample 2 --relabel  > log_exp_abalone_reduction_multi_range4_N2.txt 2>&1
-julia exp_script.jl --reduction --set_range 4 --set_Nsample 3 --relabel  > log_exp_abalone_reduction_multi_range4_N3.txt 2>&1
+# julia exp_script.jl --reduction --set_range 4 --set_Nsample 1 --relabel  > log_exp_abalone_reduction_multi_range4_N1.txt 2>&1
+# julia exp_script.jl --reduction --set_range 4 --set_Nsample 2 --relabel  > log_exp_abalone_reduction_multi_range4_N2.txt 2>&1
+# julia exp_script.jl --reduction --set_range 4 --set_Nsample 3 --relabel  > log_exp_abalone_reduction_multi_range4_N3.txt 2>&1
 
-julia exp_script.jl --reduction --set_range 5 --set_Nsample 1 --relabel  > log_exp_abalone_reduction_multi_range5_N1.txt 2>&1
-julia exp_script.jl --reduction --set_range 5 --set_Nsample 2 --relabel  > log_exp_abalone_reduction_multi_range5_N2.txt 2>&1
-julia exp_script.jl --reduction --set_range 5 --set_Nsample 3 --relabel  > log_exp_abalone_reduction_multi_range5_N3.txt 2>&1
+# julia exp_script.jl --reduction --set_range 5 --set_Nsample 1 --relabel  > log_exp_abalone_reduction_multi_range5_N1.txt 2>&1
+# julia exp_script.jl --reduction --set_range 5 --set_Nsample 2 --relabel  > log_exp_abalone_reduction_multi_range5_N2.txt 2>&1
+# julia exp_script.jl --reduction --set_range 5 --set_Nsample 3 --relabel  > log_exp_abalone_reduction_multi_range5_N3.txt 2>&1
 
-julia exp_script.jl --reduction --set_range 6 --set_Nsample 1 --relabel  > log_exp_abalone_reduction_multi_range4_N1.txt 2>&1
-julia exp_script.jl --reduction --set_range 6 --set_Nsample 2 --relabel  > log_exp_abalone_reduction_multi_range4_N2.txt 2>&1
+# julia exp_script.jl --reduction --set_range 6 --set_Nsample 1 --relabel  > log_exp_abalone_reduction_multi_range4_N1.txt 2>&1
+# julia exp_script.jl --reduction --set_range 6 --set_Nsample 2 --relabel  > log_exp_abalone_reduction_multi_range4_N2.txt 2>&1
+
+
+
+#####################
+# Sep 24 2020
+julia exp_script.jl --single --reduction --set_range 4 --set_Nsample 1 --relabel 2>&1 | tee a.out_log_exp_abalone_reduction_single_range4_N1

@@ -93,3 +93,11 @@ conductance       0.95270
 baseline: spectral clustering without attribute info 
 Time cost:       78.23350
 conductance       0.20659 
+
+2020-05-22T06:01:38.984, randseed: N/A 
+Data set: RedditHyperlinks  testing points: 35776; training data: 1662
+rangeθ_id: 1,  dimθ: 12;   N_sample: 100;    m: 495 
+Target number of clusters: 18 
+Optimal θ: [4.619214745763304, 0.6673776302818677, 0.8595806858799564, 0.12130728482008181, 0.16073997326510245, 0.037828049732130234, 0.8572722378742026, 0.47291819295871296, 0.39771311982352153, 0.3940014149919383, 0.7777227098057727, 0.37623513233508504] 
+Time cost:       910.32245
+conductance      0.02641 

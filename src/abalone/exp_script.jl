@@ -85,15 +85,17 @@ s = ArgParseSettings()
 end
 parsed_args = parse_args(ARGS, s)
 
-# input data
-# if parsed_args["dataset"] == "abalone"
-# abalone
+###########################################
+######## DATA LOAD AND PROCESSING #########
+###########################################
+# load abalone
 df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
 data = convert(Matrix, df[:,2:8]) 
 label = convert(Array, df[:, 9]) # 1 ~ 29
 k = 29
 
-# relabel: view <= 5 as one cluster, and >=15 as one cluster
+# relabel: regroup labels <= 5 as one lable, and >=15 as one label
+# then target number of clusters = 11
 if parsed_args["relabel"]
     label[label .<= 5] .= 5
     label[label .>= 15] .= 15
@@ -108,14 +110,7 @@ if ntrain > trainmax
     @warn "Trying to assign $ntrain training data; Maximum size of training data is $trainmax."
     ntrain = trainmax
 end
-# elseif parsed_args["dataset"] == "MNIST"
-#     dataraw, label = MNIST.testdata(Float64)
-#     data = reshape(permutedims(dataraw,(3, 1, 2)), size(dataraw, 3), size(dataraw,1)*size(dataraw,2));
-#     k = 10
-#     label .+= 1 # 1 ~ 10
-# else
-#     throw(ArgumentError("Dataset not supported."))
-# end
+
 # shuffle data: n * d
 randseed = 1234; rng = MersenneTwister(randseed)
 ind_shuffle = randperm(rng, size(data, 1))
@@ -123,7 +118,7 @@ data = data[ind_shuffle, :]
 label = label[ind_shuffle]
 @info "Size of whole dataset: " size(data), size(label)
 
-# select from data and label
+# Build training and testing data struct
 n = parsed_args["ntotal"]
 if n > size(data, 1)
     @warn "Have $(size(data, 1)) data only"
@@ -136,6 +131,10 @@ d = testdata.d
 traindata = trainingData(X, y, ntrain; C = parsed_args["C"])
 @info "Size of training data" size(traindata.X), size(traindata.y), typeof(traindata)
 
+###########################################
+######## SETUP LEARNING PARAMETER #########
+###########################################
+
 range_set = JLD.load("./saved_data/abalone_range_set.jld")["data"]
 if parsed_args["set_range"] == 0 # if no specific range setting is selected
     rangeθs = reshape(convert(Array{Float64, 1}, parsed_args["rangetheta"]), 1, 2)
@@ -145,6 +144,20 @@ end
 rangeθm = repeat(rangeθs, d, 1)
 rangeθ = parsed_args["single"] ? rangeθs : rangeθm
 dimθ = size(rangeθ, 1)
+
+###########################################
+########### SPECTRAL CLUSTERING ###########
+###########################################
+# multiple methods cane be used here, depending on the parsed_args
+# 1. Kmeans clustering on original data (no reduction/approximation)
+# 2. kmeans clustering on low dimensional embedding from TSNE (no reduction/approximation)
+# 2. Regular spectral cluster 
+    # a). learn optimal theta
+    # b). do spectral clustering with the optimal theta 
+    # (no reduction/approximation, all exact computation)
+# 3. Spectal clustering with dimension reduction (proposed algorithm)
+    # a) learn optimal theta with proposed fast approximation
+    # b) do spectral clustering with the optimal theta
 
 before = Dates.now()
 Vhat_timecost = 0.; N_sample = 0.; m = 0.; 
@@ -202,6 +215,10 @@ end
 after = Dates.now()
 elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
 
+
+###########################################
+###### EVALUATE CLUSTERING RESULTS ########
+###########################################
 # assign labels and return accuracy
 # max_acc, matched_assignment = ACC_match_labels(assignment, y, k, parsed_args["dataset"])
 @info "Matching labels, ntrain:" ntrain
@@ -209,6 +226,9 @@ max_acc, matched_assignment = bipartite_match_labels(assignment, y, k; trainmax 
 RI = randindex(matched_assignment[trainmax+1:end], y[trainmax+1:end])
 
 
+###########################################
+################ PRINTING #################
+###########################################
 io = open("$(parsed_args["dataset"])_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
 write(io, "Data set: $(parsed_args["dataset"])  testing points: $n; training data: $ntrain\n") 

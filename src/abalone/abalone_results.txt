@@ -1070,3 +1070,16 @@ Algorithm: Spectral clustering with model reduction (trained θ = [NaN, NaN, NaN
     Rand index (agreement probability):          0.10429
     Mirkin's index (disagreement probability):   0.89571
     Hubert's index P(agree) - P(disagree):       -0.79142 
+
+2020-09-24T14:53:50.07, randseed: 1234 
+Data set: abalone  testing points: 4177; training data: 200
+Target number of clusters: 11 
+rangeθ: [1.0 200.0], dimθ: 1; N_sample: 100; m: 37 ; Vhat_timecost = 6.44262 
+Must-link constraints weight: 1 
+Algorithm: Spectral clustering with model reduction (trained θ = 68.79333258320935) 
+    Time cost:                                   7.25119
+    Accuracy (ACC):                              0.25338
+    Adjusted Rand index:                         0.06913
+    Rand index (agreement probability):          0.79928
+    Mirkin's index (disagreement probability):   0.20072
+    Hubert's index P(agree) - P(disagree):       0.59856 
