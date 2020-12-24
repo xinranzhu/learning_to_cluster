@@ -3,12 +3,12 @@ abstract type AbstractTestingData end
 abstract type AttributedTrainingData end
 
 struct trainingData <: AbstractTrainingData
-    X::Array{Float64, 2} 
+    X::Array{Float64, 2}
     y::Array{Int64, 1}
     n::Int64
-    d::Int64 
+    d::Int64
     Apm::Symmetric{Int64,Array{Int64,2}}
-    function trainingData(X::Array{T, 2}, y::Array{Int64, 1}, ntrain::Int64; C::Int64 = 1) where T<:Float64 
+    function trainingData(X::Array{T, 2}, y::Array{Int64, 1}, ntrain::Int64; C::Int64 = 1) where T<:Float64
         Xtrain = X[1:ntrain, :]
         ytrain = y[1:ntrain]
         idtrain = 1:ntrain
@@ -18,10 +18,10 @@ struct trainingData <: AbstractTrainingData
 end
 
 struct testingData <: AbstractTestingData
-    X::Array{Float64, 2} 
+    X::Array{Float64, 2}
     y::Array{Int64, 1}
     n::Int64
-    d::Int64 
+    d::Int64
     function testingData(X::Array{Float64, 2}, y::Array{Int64, 1})
         @assert size(X, 1) == length(y)
         return new(X, y, size(X, 1), size(X, 2))
@@ -39,10 +39,12 @@ struct atttraindata <: AttributedTrainingData
     end
 end
 
+"""
+"""
 function gen_constraints(n::Int64, y::Array{Int64, 1}; C::Int64 = 1)
     Apm = Array{Float64, 2}(undef, n, n)
     R = CartesianIndices(Apm)
-    for I in R 
+    for I in R
         i, j = Tuple(I)
         if i == j
             constraint = 0

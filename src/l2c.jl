@@ -1,3 +1,10 @@
+using Polynomials
+import Polynomials.fit
+
+function fit(x::Array)
+end
+
+
 """
 Wrapper for Clustering.jl kmeans
 Inputs:
