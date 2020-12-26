@@ -11,6 +11,8 @@ Pkg.add("Printf")
 Pkg.add("Latexify")
 Pkg.add("TensorOperations")
 Pkg.add("SparseArrays")
+Pkg.add("JLD")
+Pkg.add("Combinatorics")
 using LinearAlgebra
 using Plots
 using MLDatasets
@@ -25,3 +27,5 @@ using Combinatorics
 using ProgressMeter
 using Dates
 using Printf
+using JLD
+using Combinatorics

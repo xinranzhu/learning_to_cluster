@@ -41,7 +41,6 @@ import .linear_algebra_utils: diag
     @test prod(rbf_dict["θ"] == θ)
     @test rbf_dict["var"] == 3.14
     @test rbf_dict["noise_var"] == nothing
-
 end
 
 @testset "no length scale" begin

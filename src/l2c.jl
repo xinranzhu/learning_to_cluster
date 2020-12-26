@@ -1,6 +1,9 @@
 using Polynomials
 import Polynomials.fit
 
+include("clustering/laplacian.jl")
+
+
 function fit(x::Array)
 end
 
