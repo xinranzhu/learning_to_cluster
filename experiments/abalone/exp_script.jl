@@ -37,7 +37,7 @@ s = ArgParseSettings()
     "--TSNE"
         help = "use TSNE or not"
         action = :store_true
-    "--dimY" 
+    "--dimY"
         help = "target dimension in TSNE"
         arg_type = Int
         default = 2
@@ -90,7 +90,7 @@ parsed_args = parse_args(ARGS, s)
 ###########################################
 # load abalone
 df = DataFrame(CSV.File("../datasets/abalone.csv", header = 0))
-data = convert(Matrix, df[:,2:8]) 
+data = convert(Matrix, df[:,2:8])
 label = convert(Array, df[:, 9]) # 1 ~ 29
 k = 29
 
@@ -104,7 +104,7 @@ if parsed_args["relabel"]
 end
 @info "Target number of clusterings $k"
 
-trainmax = 1000; 
+trainmax = 1000;
 ntrain = parsed_args["trainsize"]
 if ntrain > trainmax
     @warn "Trying to assign $ntrain training data; Maximum size of training data is $trainmax."
@@ -151,23 +151,23 @@ dimθ = size(rangeθ, 1)
 # multiple methods cane be used here, depending on the parsed_args
 # 1. Kmeans clustering on original data (no reduction/approximation)
 # 2. kmeans clustering on low dimensional embedding from TSNE (no reduction/approximation)
-# 2. Regular spectral cluster 
+# 2. Regular spectral cluster
     # a). learn optimal theta
-    # b). do spectral clustering with the optimal theta 
+    # b). do spectral clustering with the optimal theta
     # (no reduction/approximation, all exact computation)
 # 3. Spectal clustering with dimension reduction (proposed algorithm)
     # a) learn optimal theta with proposed fast approximation
     # b) do spectral clustering with the optimal theta
 
 before = Dates.now()
-Vhat_timecost = 0.; N_sample = 0.; m = 0.; 
+Vhat_timecost = 0.; N_sample = 0.; m = 0.;
 if parsed_args["reduction"]
     global Vhat_timecost, N_sample, m
     println("Start spectral clustering with model reduction")
     if ntrain == 0
         R = spectral_reduction_main(X, k, parsed_args["specparam"], rangeθ)
         algorithm = "Spectral clustering with model reduction (fixed θ = $(parsed_args["specparam"]))"
-    else 
+    else
         if parsed_args["set_range"] == 0 || parsed_args["set_Nsample"] == 0
             Vhat_set = nothing
         else  # load Vhat_set if precomputed
@@ -176,11 +176,11 @@ if parsed_args["reduction"]
             N_sample = Vhat_set.N_sample
             Vhat_timecost = Vhat_set.timecost
             m = size(Vhat_set.Vhat, 2)
-            @assert Vhat_set.rangeθ == rangeθ 
+            @assert Vhat_set.rangeθ == rangeθ
             @info "Finish loading Vhat, rangeθ, N_sample, m, timecost" rangeθ[1, 1], rangeθ[1, 2], N_sample, Vhat_timecost
         end
         θ_init = rand(dimθ) .* (rangeθ[:, 2] .- rangeθ[:, 1]) .+ rangeθ[:, 1]
-        θ_init = dimθ == 1 ? θ_init[1] : θ_init 
+        θ_init = dimθ == 1 ? θ_init[1] : θ_init
         if !parsed_args["single"]
             θ_init = [180.01699864462196, 107.39498972302539, 20.01724343783694, 198.42119403069842, 120.3707825049378, 9.984329835191813, 143.56003802364557]
         end
@@ -193,13 +193,13 @@ else # do normal clustering, using plain kmeans or TSNE+kmeans or spectral clust
         println("Start TSNE")
         X = mytsne(X, parsed_args["dimY"], calculate_error_every=100, plot_every=0, lr=100)
         algorithm = "TSNE(dim=$(parsed_args["dimY"])) + Kmeans"
-    elseif parsed_args["spectral"] 
+    elseif parsed_args["spectral"]
         println("Start spectral clustering")
         if parsed_args["specparam"] > 0 # if given a fixed param
-            X, _ = spectral_clustering_model(X, k, parsed_args["specparam"]; if_deriv = false) 
+            X, _ = spectral_clustering_model(X, k, parsed_args["specparam"]; if_deriv = false)
             algorithm = "Spectral (fixed θ=$(parsed_args["specparam"])) + Kmeans"
         else
-            X, θ = spectral_clustering_main(X, k, traindata, rangeθ) 
+            X, θ = spectral_clustering_main(X, k, traindata, rangeθ)
             algorithm = "Supervised Spectral (trained θ=$θ) + Kmeans"
         end
     end
@@ -213,7 +213,7 @@ end
 # c = counts(R) # get the cluster sizes
 # M = R.centers # get the cluster centers
 after = Dates.now()
-elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost 
+elapsedmin = round(((after - before) / Millisecond(1000))/60, digits=5) + Vhat_timecost
 
 
 ###########################################
@@ -231,11 +231,11 @@ RI = randindex(matched_assignment[trainmax+1:end], y[trainmax+1:end])
 ###########################################
 io = open("$(parsed_args["dataset"])_results.txt", "a")
 write(io, "\n$(Dates.now()), randseed: $randseed \n" )
-write(io, "Data set: $(parsed_args["dataset"])  testing points: $n; training data: $ntrain\n") 
+write(io, "Data set: $(parsed_args["dataset"])  testing points: $n; training data: $ntrain\n")
 write(io, "Target number of clusters: $k \n")
 write(io, "rangeθ: $rangeθs, dimθ: $dimθ; N_sample: $N_sample; m: $m ; Vhat_timecost = $Vhat_timecost \n")
 write(io, "Must-link constraints weight: $(parsed_args["C"]) \n")
-write(io, "Algorithm: $algorithm 
+write(io, "Algorithm: $algorithm
     Time cost:                                   $(@sprintf("%.5f", elapsedmin))
     Accuracy (ACC):                              $(@sprintf("%.5f", max_acc))
     Adjusted Rand index:                         $(@sprintf("%.5f", RI[1]))
