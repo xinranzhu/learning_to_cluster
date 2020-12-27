@@ -1,4 +1,8 @@
 include("../kernels/kernels.jl")
+using TensorOperations
+
+# Laplacian and relevant matrix computations (including derivatives)
+
 # derivatives w.r.t. θ in R^d
 # derivatives of affinity matrix A, Degree matrix, normalized Laplacian and then eigenvectors...
 
@@ -77,5 +81,25 @@ function laplacian_L(X, θ; I_rows = nothing, derivative = true)
     end
     return L, dL
 end
-
 # function laplacian_L_attributed()
+
+"""
+Compute derivative of eigenvectors of Laplacian w.r.t hyperparameters
+"""
+function comp_dV(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}}, dL::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64) where T<:Float64
+    n, k = size(V)
+    dV = Array{Float64, 3}(undef, n, k, dimθ)
+    for i in 1:k
+        v = V[:, i]
+        if dimθ == 1
+            dLv = dL * v
+        else
+            dLv = dHy = Array{Float64, 2}(undef, n, dimθ)
+            @tensor dLv[i, j] = dL[i, s, j] * v[s]
+        end
+        dLv .-= v * (v' * dLv)
+        dV[:, i, :] =  [(Λ[i] * I(n) - L); v'] \ [dLv; zeros(dimθ)'] #solve linear system for derivative of eigenvector
+    end
+    dV = dimθ == 1 ? dropdims(dV; dims = 3) : dV
+    return dV
+end

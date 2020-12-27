@@ -5,14 +5,9 @@ using Hungarian
 using Combinatorics
 using Statistics
 using LinearAlgebra
-include("../../src/visualization/TSNE/myTSNE.jl")
-include("../../src/clustering/kmeans_match_labels.jl")
-include("../../src/clustering/laplacian.jl")
+using Test
 include("../../src/clustering/spectral.jl")
-
-#include("../../src/model reduction/spectral/spectral_clustering.jl")
-#include("../spectral/spectral_reduction_main.jl")
-#include("../datastructs.jl")
+include("../../src/clustering/laplacian.jl")
 
 ###########################################
 ######## DATA LOAD AND PROCESSING #########
@@ -34,7 +29,6 @@ label[label .> 14] .= 6
 k = 6
 
 @info "Target number of clusterings $k"
-
 ## K-means clustering
 R = kmeans(data', 6; maxiter=100, display=:final)
 @assert nclusters(R) == 6 # verify the number of clusters
@@ -47,14 +41,4 @@ max_acc, matched_assignment = bipartite_match_labels(assignment, label, 6) # ass
 L = Matrix(laplacian_L(data, 1.0*ones(7))[1])
 sc_assignment = cluster_spectral(L, 6)
 sc_max_acc, matched_assignment = bipartite_match_labels(sc_assignment, label, 6)
-
-## Spectral clustering with theta set according to variances of coords
-inv_variances = reshape(1 ./ mapslices(var, data, dims=1), 7, 1)
-L_var = Matrix(laplacian_L(data, 0.05*inv_variances)[1])
-sc_assignment_var = cluster_spectral(L_var, 6)
-sc_max_acc_var, matched_assignment_var = bipartite_match_labels(sc_assignment_var, label, 6)
-
-## Spectral clustering with theta set according to variances of coords
-L_var = Matrix(laplacian_L(data, [1.0, 2.0, 0.5, 1.0, 1.5, 0.5, 2.0])[1])
-sc_assignment_var = cluster_spectral(L_var, 6)
-sc_max_acc_var, matched_assignment_var = bipartite_match_labels(sc_assignment_var, label, 6)
+@test sc_max_acc > max_acc

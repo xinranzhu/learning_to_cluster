@@ -11,10 +11,10 @@ function spectral_clustering_main(X::Array{T, 2}, k::Int, traindata::AbstractTra
     Apm = traindata.Apm
     ntotal, d = size(X)
     # optimize loss fun
-    loss(θ) = loss_fun(X, k, θ, traindata; if_deriv = false)[1] 
-    loss_deriv(θ) = loss_fun(X, k, θ, traindata)[2] 
-    function loss_deriv!(G, θ) 
-        G = loss_fun(X, k, θ, traindata)[2] 
+    loss(θ) = loss_fun(X, k, θ, traindata; if_deriv = false)[1]
+    loss_deriv(θ) = loss_fun(X, k, θ, traindata)[2]
+    function loss_deriv!(G, θ)
+        G = loss_fun(X, k, θ, traindata)[2]
     end
     @info "Start training"
     if dimθ == 1
@@ -27,7 +27,7 @@ function spectral_clustering_main(X::Array{T, 2}, k::Int, traindata::AbstractTra
         θ = Optim.minimizer(results)
     end
     @info "Finish training, optimal θ" θ
-    # Compute eigenvectors on Xtest using the optimal θ 
+    # Compute eigenvectors on Xtest using the optimal θ
     V, _ = spectral_clustering_model(X, k, θ; if_deriv = false)
     return V, θ
 end
@@ -51,12 +51,12 @@ function spectral_clustering_model(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}
 
     # compute dV
     dV = if_deriv ? comp_dV_L(V, Λ, L, dL, dimθ) : nothing
-    # @info "finish computing dV" 
+    # @info "finish computing dV"
 
     # normalize rows of V
     # rownorms = mapsliceås(norm, V; dims = 2)
     # V = broadcast(/, V, rownorms)
-    return V, dV 
+    return V, dV
 end
 
 function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::AbstractTrainingData; if_deriv::Bool = true) where T<:Float64
@@ -69,7 +69,7 @@ function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::
     V, dV = spectral_clustering_model(X, k, θ)
     @assert size(V) == (n, k)
     V_train = V[1:ntrain, :]
-    if if_deriv 
+    if if_deriv
         dV_train = reshape(dV, n, k, dimθ)[1:ntrain, :, :]
         # derivative
         K1 = broadcast(-, reshape(V_train, ntrain, 1, k, 1), reshape(V_train, 1, ntrain, k, 1))
@@ -90,10 +90,13 @@ function loss_fun(X::Array{T, 2}, k::Int, θ::Union{Array{T, 1}, T}, traindata::
     return loss, dloss
 end
 
+"""
+Compute Derivative of Eigenvectors w.r.t hyperparameters
+"""
 function comp_dV_L(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}}, dL::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64) where T<:Float64
     n, k = size(V)
     dV = Array{Float64, 3}(undef, n, k, dimθ)
-    for i in 1:k 
+    for i in 1:k
         v = V[:, i]
         if dimθ == 1
             dLv = dL * v
@@ -102,7 +105,7 @@ function comp_dV_L(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}}, 
             @tensor dLv[i, j] = dL[i, s, j] * v[s]
         end
         dLv .-= v * (v' * dLv)
-        dV[:, i, :] =  [(Λ[i] * I(n) - L); v'] \ [dLv; zeros(dimθ)'] 
+        dV[:, i, :] =  [(Λ[i] * I(n) - L); v'] \ [dLv; zeros(dimθ)'] #solve linear system for derivative of eigenvector
     end
     dV = dimθ == 1 ? dropdims(dV; dims = 3) : dV
     return dV

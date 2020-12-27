@@ -7,7 +7,6 @@ include("clustering/laplacian.jl")
 function fit(x::Array)
 end
 
-
 """
 Wrapper for Clustering.jl kmeans
 Inputs:
