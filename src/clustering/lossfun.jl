@@ -12,14 +12,17 @@ Outputs:
     - dloss
 """
 function loss_fun(X::Array{T, 2}, k, d, θ,
-    traindata::AbstractTrainingData) where T<:Float64
+    traindata::AbstractTrainingData; normalized = true) where T<:Float64
 
     ntrain = traindata.n
     LinkConstraintsMatrix = traindata.LinkConstraintsMatrix
     (L, dL) = laplacian_L(X, θ)
     (V, Λ) = compute_eigs(Matrix(L), k)
-    dV = comp_dV(V, Λ, L, dL, d)
-
+    dV = comp_dV(V, Λ, L, dL, d; normalized = normalized)
+    if normalized
+        rownorms = mapslices(norm, V; dims = 2)
+        V = broadcast(/, V, rownorms)
+    end
     n = size(V, 1)
     dimθ = length(θ)
     @assert size(LinkConstraintsMatrix) == (ntrain, ntrain)

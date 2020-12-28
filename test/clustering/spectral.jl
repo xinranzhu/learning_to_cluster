@@ -14,15 +14,16 @@ include("../../src/clustering/spectral.jl")
 include("../../src/clustering/laplacian.jl")
 include("../../src/clustering/lossfun.jl")
 include("../../src/clustering/kmeans_match_labels.jl")
+
+include("../../src/l2c.jl")
 ###########################################
 ######## DATA LOAD AND PROCESSING #########
 ###########################################
 # load abalone
 pwd()
 df = DataFrame(CSV.File("experiments/datasets/abalone.csv", header = 0))
-
-data = convert(Matrix, df[1:1000,2:8])
-label = convert(Array, df[1:1000, 9]) # 1 ~ 29
+data = convert(Matrix, df[500:1500,2:8])
+label = convert(Array, df[500:1500, 9]) # 1 ~ 29
 k = 29
 # relabel: regroup labels <= 5 as one lable, and >=15 as one label
 # then target number of clusters = 11
@@ -57,18 +58,16 @@ function SC(theta; normalized = true)
     return sc_max_acc
 end
 
-
 ## Train for θ using labeled data and geometric loss function
 k = 6
 d = 7
-mytrain = trainingData(data, label, 200)
-q(θ) = loss_fun(data, k, d, θ, mytrain)[1]
-dq(θ) = loss_fun(data, k, d, θ, mytrain)[2]
+mytrain = trainingData(data, label, 333)
+q(θ) = loss_fun(data, k, d, θ, mytrain; normalized = true)[1]
+dq(θ) = loss_fun(data, k, d, θ, mytrain; normalized = true)[2]
 @time q(ones(d))
 @time dq(ones(d))
 rangeθ = hcat(0.01*reshape(ones(d), d, 1), 100*reshape(ones(d), d, 1))
 function loss_deriv!(G, θ)
-    @show "in loss deriv!"
     G .= dq(θ)
 end
 θ_init = ones(d)
@@ -89,10 +88,10 @@ end
 #inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
 inner_optimizer = LBFGS()
 # inner_optimizer = ConjugateGradient()
-results = Optim.optimize(q, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = 1000.0))
+results = Optim.optimize(q, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = 300.0))
 optθ = Optim.minimizer(results)
 @show optθ
-##
+## Trained optimal θ vs random initialization ones(d)
 N = 50
 avg = 0.0
 for i = 1:N
@@ -119,3 +118,15 @@ end
 
 @show avg/N
 @show avg2/N
+
+## spectral clustering evaluation function from l2c.jl
+
+all = Dict()
+
+for i = 1:9
+    frac_train = i * 0.1
+    res = evaluate_spectral_clustering(data, label; frac_train = frac_train, train = true, ntrials = 20)
+    all[frac_train] = res
+end
+
+@show all
