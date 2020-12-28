@@ -87,9 +87,11 @@ end
 # function laplacian_L_attributed()
 
 """
-Compute derivative of eigenvectors of Laplacian w.r.t hyperparameters
+Compute derivative of eigenvectors of Laplacian w.r.t hyperparameters.
+If normalized flag is set to true, then computes entry-wise derivative of normalized V.
 """
-function comp_dV(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}}, dL::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64) where T<:Float64
+function comp_dV(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}},
+    dL::Union{Array{T, 2}, Array{T, 3}}, dimθ::Int64; normalized = true) where T<:Float64
     n, k = size(V)
     dV = Array{Float64, 3}(undef, n, k, dimθ)
     for i in 1:k
@@ -104,5 +106,20 @@ function comp_dV(V::Array{T, 2}, Λ::Array{T, 1}, L::Symmetric{T,Array{T,2}}, dL
         dV[:, i, :] =  [(Λ[i] * I(n) - L); v'] \ [dLv; zeros(dimθ)'] #solve linear system for derivative of eigenvector
     end
     dV = dimθ == 1 ? dropdims(dV; dims = 3) : dV
+    if normalized
+        row_norms = mapslices(norm, V; dims=2)
+        row_norms_squared = row_norms .^ 2
+        dV_normalized = Array{Float64, 3}(undef, n, k, dimθ)
+        for i = 1:n
+            for j = 1:k
+                total = zeros(dimθ)
+                for w = [1:j-1; j+1:k]
+                    total += V[i, w] * (dV[i, j, :]*V[i, w] - V[i, j]*dV[i, w, :])
+                end
+                dV_normalized[i, j, :] = total ./ row_norms_squared[i]^(3/2)
+            end
+        end
+        dV = dV_normalized
+    end
     return dV
 end
