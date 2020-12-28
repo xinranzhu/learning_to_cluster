@@ -21,8 +21,8 @@ include("../../src/clustering/kmeans_match_labels.jl")
 pwd()
 df = DataFrame(CSV.File("experiments/datasets/abalone.csv", header = 0))
 
-data = convert(Matrix, df[1:500,2:8])
-label = convert(Array, df[1:500, 9]) # 1 ~ 29
+data = convert(Matrix, df[1:1000,2:8])
+label = convert(Array, df[1:1000, 9]) # 1 ~ 29
 k = 29
 # relabel: regroup labels <= 5 as one lable, and >=15 as one label
 # then target number of clusters = 11
@@ -50,9 +50,9 @@ sc_max_acc, matched_assignment = bipartite_match_labels(sc_assignment, label, 6)
 @show sc_max_acc
 #@test sc_max_acc > max_acc
 
-function SC(theta)
+function SC(theta; normalized = true)
     L = Matrix(laplacian_L(data, theta)[1])
-    sc_assignment = cluster_spectral(L, 6)
+    sc_assignment = cluster_spectral(L, 6; normalized = normalized)
     sc_max_acc, matched_assignment = bipartite_match_labels(sc_assignment, label, 6)
     return sc_max_acc
 end
@@ -61,7 +61,7 @@ end
 ## Train for θ using labeled data and geometric loss function
 k = 6
 d = 7
-mytrain = trainingData(data, label, 400)
+mytrain = trainingData(data, label, 200)
 q(θ) = loss_fun(data, k, d, θ, mytrain)[1]
 dq(θ) = loss_fun(data, k, d, θ, mytrain)[2]
 @time q(ones(d))
@@ -77,8 +77,10 @@ end
 A = affinity_A(data, 100*ones(d))
 L
 #derivative check passes
-(r1, r2, r3, r4) = checkDerivative(q, dq, ones(d), nothing, 2, 13)
-r4
+if false
+    (r1, r2, r3, r4) = checkDerivative(q, dq, ones(d), nothing, 2, 13)
+    @show r4
+end
 # inner_optimizer = GradientDescent(
 #                                     alphaguess = LineSearches.InitialStatic(alpha = 2., scaled = false),
 #                                     linesearch = LineSearches.StrongWolfe())
@@ -87,11 +89,11 @@ r4
 #inner_optimizer = OACCEL(nlprecon=nlprecon, wmax=10)
 inner_optimizer = LBFGS()
 # inner_optimizer = ConjugateGradient()
-results = Optim.optimize(q, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = 100.0))
+results = Optim.optimize(q, loss_deriv!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = 1000.0))
 optθ = Optim.minimizer(results)
 @show optθ
 ##
-N = 100
+N = 50
 avg = 0.0
 for i = 1:N
     global avg += SC(optθ)
@@ -99,6 +101,20 @@ end
 avg2 = 0.0
 for i = 1:N
     global avg2 = avg2 + SC(ones(7))
+end
+
+@show avg/N
+@show avg2/N
+
+## normalized vs unnormalized SC
+N = 50
+avg = 0.0
+for i = 1:N
+    global avg += SC(ones(d), normalized = false)
+end
+avg2 = 0.0
+for i = 1:N
+    global avg2 = avg2 + SC(ones(d), normalized = true)
 end
 
 @show avg/N
