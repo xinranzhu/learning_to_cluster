@@ -7,13 +7,15 @@ Pkg.add("Dates")
 Pkg.add("Distances")
 Pkg.add("Distributions")
 Pkg.add("ProgressMeter")
-Pkg.add("Hungarian") 
+Pkg.add("Hungarian")
 Pkg.add("Printf")
 Pkg.add("Latexify")
 Pkg.add("TensorOperations")
 Pkg.add("SparseArrays")
 Pkg.add("JLD")
 Pkg.add("Combinatorics")
+Pkg.add("Roots")
+Pkg.add("LineSearches")
 using LinearAlgebra
 using Plots
 using MLDatasets
@@ -30,3 +32,4 @@ using Dates
 using Printf
 using JLD
 using Combinatorics
+using LineSearches

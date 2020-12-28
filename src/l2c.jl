@@ -15,7 +15,7 @@ INPUTS:
             θ_init defaults to ones(d)
     - ntrials: number of trials
 """
-function evaluate_spectral_clustering(data, label; frac_train = 0.3, train = false, ntrials = 20, time_limit = 100)
+function evaluate_spectral_clustering(data, label; frac_train = 0.3, train::Bool = false, normalized::Bool = true, ntrials = 20, time_limit = 100)
     n = size(data, 1)
     k = length(unique(label))
     @assert minimum(label)==1
@@ -33,44 +33,29 @@ function evaluate_spectral_clustering(data, label; frac_train = 0.3, train = fal
         sc_max_acc, matched_assignment = bipartite_match_labels(sc_assignment, label, 6)
         return sc_max_acc
     end
+    total = 0.0
     if train == false
-        result[:U] = SC(θ_init, normalized = false)
-        result[:N] = SC(θ_init, normalized = true)
-    elseif train == true
+        for i = 1:ntrials
+            total += SC(θ_init, normalized = normalized)
+        end
+    else
         # Semisupervised/trained normalized and unnormalized SC
         rangeθ = hcat(0.01*reshape(ones(d), d, 1), 100*reshape(ones(d), d, 1))
         inner_optimizer = LBFGS()
         #Unnormalized and trained SC
-        q(θ) = loss_fun(data, k, d, θ, mytrain; normalized = false)[1]
-        dq(θ) = loss_fun(data, k, d, θ, mytrain; normalized = false)[2]
+        q(θ) = loss_fun(data, k, d, θ, mytrain; normalized = normalized)[1]
+        dq(θ) = loss_fun(data, k, d, θ, mytrain; normalized = normalized)[2]
         function dq!(G, θ)
             G .= dq(θ)
         end
-        opt_U = Optim.optimize(q, dq!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = time_limit))
-        optθ_U = Optim.minimizer(opt_U)
-        @info optθ_U
-        total_U = 0
+        opt = Optim.optimize(q, dq!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = time_limit))
+        optθ = Optim.minimizer(opt)
+        @info optθ
         for i = 1:ntrials
-            total_U += SC(optθ_U, normalized = false)
+            total += SC(optθ, normalized = normalized)
         end
-        result[:U] = total_U/ntrials
-        # Normalized and trained SC
-        h(θ) = loss_fun(data, k, d, θ, mytrain; normalized = true)[1]
-        dh(θ) = loss_fun(data, k, d, θ, mytrain; normalized = true)[2]
-        function dh!(G, θ)
-            G .= dh(θ)
-        end
-        opt_N = Optim.optimize(h, dh!, rangeθ[:,1], rangeθ[:,2], θ_init, Fminbox(inner_optimizer), Optim.Options(show_trace=true, time_limit = time_limit))
-        optθ_N = Optim.minimizer(opt_N)
-        @info optθ_N
-        total_N = 0
-        for i = 1:ntrials
-            total_N += SC(optθ_N, normalized = true)
-        end
-        result[:N] = total_N/ntrials
-    else
-        error("train flag must be true or false")
     end
+    result[:Ans] = total / ntrials
     return result
 end
 

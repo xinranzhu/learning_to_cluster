@@ -22,8 +22,8 @@ addprocs(8)
 # load data
 @everywhere begin
     df = DataFrame(CSV.File("experiments/datasets/abalone.csv", header = 0))
-    data = convert(Matrix, df[500:1500,2:8])
-    label = convert(Array, df[500:1500, 9]) # 1 ~ 29
+    data = convert(Matrix, df[500:2500,2:8])
+    label = convert(Array, df[500:2500, 9]) # 1 ~ 29
     # relabel: regroup labels <= 5 as one lable, and >=15 as one label
     # then target number of clusters = 11
     label[label .<= 6] .= 1
@@ -40,8 +40,9 @@ end
         for i in localindices(S)
             #S[i] = myid()
             #S[i] = norm(2*test.a[:, i])
-            res = evaluate_spectral_clustering(data, label; frac_train = i * 0.1, train = true, ntrials = 20, time_limit = 100)
-            S[i] = res[:U]
+            res = evaluate_spectral_clustering(data, label; frac_train = i * 0.1,
+                train = true, normalized = true, ntrials = 20, time_limit = 100)
+            S[i] = res[:Ans]
             #S[i+1] = res[:N]
         end
     end
@@ -50,9 +51,9 @@ print("procs: "* string(procs()))
 @timeit to "parallel" S = SharedArray{Float64,2}((1,9), init = S -> populate(S))
 
 # write results
-io = open("12_28_20_results.txt", "a")
+io = open("12_28_20_results_normalized_new_test.txt", "a")
 write(io, "\n SHARED ARRAY: UNNORMALIZED SC ACCS\n" )
 for i = 1:length(S)
-    write(io, "\n $(S[i]) \n" )
+    write(io, "\n $(S[i]) " )
 end
 close(io)
