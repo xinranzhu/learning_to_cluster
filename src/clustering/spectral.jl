@@ -21,8 +21,8 @@ function cluster_spectral(L::Array{T, 2}, k::Int) where T<:Float64
     # @info "finish computing V" size(V), n, k, size(ef.vectors)
     @assert size(V, 2) == k # make sure returns k eigenvectors
     # normalize rows of V
-    rownorms = mapslices(norm, V; dims = 2)
-    V = broadcast(/, V, rownorms)
+    #rownorms = mapslices(norm, V; dims = 2)
+    #V = broadcast(/, V, rownorms)
     R = kmeans(V', k; maxiter=100, display=:final)
     assignment = assignments(R)
     return assignment

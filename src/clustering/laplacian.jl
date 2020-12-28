@@ -48,6 +48,9 @@ function degree_D(X, θ; derivative = true)
     return D, dD, A, dA
 end
 
+"""
+D^-1/2 * A * D^-1/2
+"""
 function laplacian_L(X, θ; I_rows = nothing, derivative = true)
     # @info "enter laplacian"
     D, dD, A, dA = degree_D(X, θ; derivative = derivative)

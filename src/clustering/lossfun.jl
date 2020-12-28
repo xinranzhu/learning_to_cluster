@@ -17,13 +17,19 @@ function loss_fun(X::Array{T, 2}, k, d, θ,
     ntrain = traindata.n
     LinkConstraintsMatrix = traindata.LinkConstraintsMatrix
     (L, dL) = laplacian_L(X, θ)
-    (V, Λ) = compute_eigs(Matrix(L), 2)
-    dV = comp_dV(V, Λ, L, dL, 3)
+    (V, Λ) = compute_eigs(Matrix(L), k)
+    dV = comp_dV(V, Λ, L, dL, d)
 
     n = size(V, 1)
     dimθ = length(θ)
     @assert size(LinkConstraintsMatrix) == (ntrain, ntrain)
-    @assert size(V) == (n, k)
+    if size(V) != (n, k)
+        a = size(V, 1)
+        b = size(V, 2)
+        @show L[1:2, 1:2]
+        @show θ
+        error("size of V is $a by $b but should be $n by $k")
+    end
     V_train = V[1:ntrain, :]
     #compute derivative
     dV_train = reshape(dV, n, k, dimθ)[1:ntrain, :, :]
