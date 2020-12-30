@@ -51,3 +51,29 @@ function loss_fun(X::Array{T, 2}, k, d, θ,
     loss = dot(LinkConstraintsMatrix, K) ./ 2
     return loss, dloss
 end
+
+"""
+Eigengap of L(θ). Computes first k+1 eigenvalue/eigenvector pairs to
+find eigengap between kth and (k+1)th eigenvalues
+"""
+function loss_fun_eigengap(X::Array{T, 2}, k, d, θ) where T<:Float64
+    n = size(X, 1)
+    (L, dL) = laplacian_L(X, θ)
+    (V, Λ) = compute_eigs(Matrix(L), k+1)
+    #dV = comp_dV(V, Λ, L, dL, d; normalized = normalized)
+    if k+1>n
+        error("cannot compute eigengap, because k=n")
+    end
+    eigengap = Λ[2]-Λ[1]
+    #@info "eigengap", eigengap
+    v2 = reshape(V[:, 2], n, 1); v1 = reshape(V[:, 1], n, 1)
+    #@info "diff", diff
+    f(M, v) = (v')* (M*v)
+    res = zeros(length(θ), 1)
+    for i = 1:length(θ)
+        res[i] = f(dL[:, :, i], v2)[1] - f(dL[:, :, i], v1)[1]
+    end
+    deigengap = res
+    #deigengap = (diff') * (dL * diff)
+    eigengap, deigengap
+end

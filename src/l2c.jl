@@ -6,6 +6,8 @@ include("clustering/laplacian.jl")
 include("clustering/lossfun.jl")
 include("clustering/spectral.jl")
 include("clustering/kmeans_match_labels.jl")
+include("utils/preprocess.jl")
+
 
 """
 Evaluate and compare variants of SC, including normalized and unnormalized,
@@ -16,7 +18,7 @@ INPUTS:
     - ntrials: number of trials
 """
 function evaluate_spectral_clustering(data, label; frac_train = 0.3, train::Bool = false, normalized::Bool = true, ntrials = 20, time_limit = 100)
-    n = size(data, 1)
+    n = length(label)
     k = length(unique(label))
     @assert minimum(label)==1
     d = size(data, 2)
@@ -27,16 +29,16 @@ function evaluate_spectral_clustering(data, label; frac_train = 0.3, train::Bool
     result = Dict()
     # untrained normalized and unnormalized SC
     θ_init = ones(d)
-    function SC(theta; normalized = false)
+    function SC(theta; sc_normalized = false)
         L = Matrix(laplacian_L(data, theta)[1])
-        sc_assignment = cluster_spectral(L, k; normalized = normalized)
+        sc_assignment = cluster_spectral(L, k; normalized = sc_normalized)
         sc_max_acc, matched_assignment = bipartite_match_labels(sc_assignment, label, 6)
         return sc_max_acc
     end
     total = 0.0
     if train == false
         for i = 1:ntrials
-            total += SC(θ_init, normalized = normalized)
+            total += SC(θ_init, sc_normalized = normalized)
         end
     else
         # Semisupervised/trained normalized and unnormalized SC
@@ -52,7 +54,7 @@ function evaluate_spectral_clustering(data, label; frac_train = 0.3, train::Bool
         optθ = Optim.minimizer(opt)
         @info optθ
         for i = 1:ntrials
-            total += SC(optθ, normalized = normalized)
+            total += SC(optθ, sc_normalized = normalized)
         end
     end
     result[:Ans] = total / ntrials

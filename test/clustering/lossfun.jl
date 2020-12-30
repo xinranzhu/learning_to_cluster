@@ -39,3 +39,17 @@ df([1.0, 2.0, 3.0])
 r3
 r4
 @test r4[1] ≈ 2 atol = 0.5
+
+## test eigengap and derivative
+x = rand(5, 4)
+k = 3
+d = 4
+
+u(θ) = loss_fun_eigengap(x, k, d, θ)[1]
+du(θ) = loss_fun_eigengap(x, k, d, θ)[2]
+
+u(ones(4))
+du(ones(4))
+(r1, r2, r3, r4) = checkDerivative(u, du, ones(4), nothing, 1, 10)
+r4
+r3
