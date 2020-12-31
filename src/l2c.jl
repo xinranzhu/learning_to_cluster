@@ -45,8 +45,10 @@ function evaluate_spectral_clustering(data, label; frac_train = 0.3, train::Bool
         rangeθ = hcat(0.01*reshape(ones(d), d, 1), 100*reshape(ones(d), d, 1))
         inner_optimizer = LBFGS()
         #Unnormalized and trained SC
-        q(θ) = loss_fun(data, k, d, θ, mytrain; normalized = normalized)[1]
-        dq(θ) = loss_fun(data, k, d, θ, mytrain; normalized = normalized)[2]
+        #q(θ) = loss_fun(data, k, d, θ, mytrain; normalized = normalized)[1]
+        #dq(θ) = loss_fun(data, k, d, θ, mytrain; normalized = normalized)[2]
+        q(θ) = - loss_fun_eigengap(data, k, d, θ)[1]
+        dq(θ) = - loss_fun_eigengap(data, k, d, θ)[2][:]
         function dq!(G, θ)
             G .= dq(θ)
         end
