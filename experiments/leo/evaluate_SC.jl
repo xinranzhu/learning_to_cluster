@@ -28,19 +28,20 @@ addprocs(8)
 
 @everywhere function populate(S)
         for i in localindices(S)
+            @info i
             #S[i] = myid()
             #S[i] = norm(2*test.a[:, i])
             res = evaluate_spectral_clustering(data, label; frac_train = 2*i * 0.1 - 0.1, #1, 3, 5, 7, 9
-                train = true, normalized = true, ntrials = 10, time_limit = 200)
+                train = true, normalized = false, ntrials = 1, time_limit = 200)
             S[i] = round(res[:Ans], digits = 4)
             #S[i+1] = res[:N]
         end
     end
 
 print("procs: "* string(procs()))
-@timeit to "parallel" S = SharedArray{Float64,2}((1,1), init = S -> populate(S))
+@timeit to "parallel" S = SharedArray{Float64,2}((1,5), init = S -> populate(S))
 # write results
-io = open("12_30_20_train_connect_4.txt", "a")
+io = open("12_30_20_train_abalone_2_class.txt", "a")
 write(io, "\n SHARED ARRAY: UNNORMALIZED SC ACCS\n" )
 for i = 1:length(S)
     write(io, "\n $(S[i]) " )

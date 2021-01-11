@@ -17,12 +17,13 @@ INPUTS:
             θ_init defaults to ones(d)
     - ntrials: number of trials
 """
-function evaluate_spectral_clustering(data, label; frac_train = 0.3, train::Bool = false, normalized::Bool = true, ntrials = 20, time_limit = 100)
+function evaluate_spectral_clustering(data, label; frac_train = 0.1, train::Bool = false, normalized::Bool = true, ntrials = 20, time_limit = 100)
     n = length(label)
     k = length(unique(label))
     @assert minimum(label)==1
     d = size(data, 2)
     @assert frac_train < 1; @assert frac_train > 0
+    @info frac_train
     ntrain = floor(n * frac_train)
     mytrain = trainingData(data, label, Int(ntrain))
 
