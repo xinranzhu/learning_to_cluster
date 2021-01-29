@@ -21,12 +21,13 @@ Inputs:
     - X: entire dataset, what to cluster
     - trainingData: subset of data with ground truth labels
     - method: "approximate" or "exact"
+    - V_hat
 Outputs:
     - loss, dloss
 """
 function computeLoss(; method = "approximate", "exact")
     if method == "approximate"
-        #TODO 
+        #TODO
         # L = laplacian_L(X, θ; I_rows = nothing, derivative = true)
     elseif method == "exact"
         # use lossfun from clustering/lossfun.jl
@@ -42,6 +43,7 @@ Inputs:
      - loss and derivative functions
 """
 function optimizeLaplacian()
+    
 end
 
 """
