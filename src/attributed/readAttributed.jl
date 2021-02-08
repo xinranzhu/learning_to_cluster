@@ -146,8 +146,6 @@ function getBodyWeightedAdj()
     return ss
 end
 
-
-
 """
 returns symmetric sum ss + ss'
 """
